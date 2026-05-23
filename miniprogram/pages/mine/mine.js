@@ -150,5 +150,5 @@ Page({
   goPets() { wx.navigateTo({ url: '/pages/mine/pets/index' }) },
   goActivities() { wx.navigateTo({ url: '/pages/activity/list/index' }) },
   goRegistrations() { wx.showToast({ title: '报名记录开发中', icon: 'none' }) },
-  goRecharges() { wx.showToast({ title: '充值记录开发中', icon: 'none' }) }
+  goRecharges() { wx.navigateTo({ url: '/pages/mine/recharges/index' }) }
 })

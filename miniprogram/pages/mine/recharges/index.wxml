@@ -1,0 +1,42 @@
+<view class="container recharge-page">
+  <view class="recharge-list" wx:if="{{records.length>0}}">
+    <view class="recharge-card {{item.status}}" wx:for="{{records}}" wx:key="id">
+      <view class="recharge-header">
+        <view class="recharge-date">{{item._date}}</view>
+        <view class="recharge-status {{item.status}}">
+          {{item.status==='success'?'充值成功':(item.status==='pending'?'待支付':'失败')}}
+        </view>
+      </view>
+      <view class="recharge-body">
+        <view class="recharge-row">
+          <text class="label">充值金额</text>
+          <text class="value">¥{{item._amount}}</text>
+        </view>
+        <view class="recharge-row" wx:if="{{item.gifted_amount>0}}">
+          <text class="label">赠送金额</text>
+          <text class="value gift">+¥{{item._gifted}}</text>
+        </view>
+        <view class="recharge-row total">
+          <text class="label">实际到账</text>
+          <text class="value highlight">¥{{item._total}}</text>
+        </view>
+        <view class="recharge-row" wx:if="{{item.channel}}">
+          <text class="label">支付方式</text>
+          <text class="value channel">{{item.channel==='wxpay'?'微信支付':item.channel}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="load-more" wx:if="{{hasMore}}">
+      <text>加载中...</text>
+    </view>
+    <view class="load-more" wx:if="{{!hasMore && records.length>0}}">
+      <text>没有更多记录了</text>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{records.length===0 && !loading}}">
+    <view class="empty-icon">💳</view>
+    <text class="empty-text">暂无充值记录</text>
+    <text class="empty-tip">充值后可享受会员优惠和余额支付</text>
+  </view>
+</view>

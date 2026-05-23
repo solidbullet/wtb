@@ -167,12 +167,13 @@ func (s *UserService) RechargeByPlan(userID uint, planID int, channel string) (*
 	}
 
 	// 创建充值记录（记录实际支付的差价和实际到账）
+	// ⚠️ 支付接口开发中：记录状态为 pending，等微信支付回调后再改为 success
 	record := &model.RechargeRecord{
 		UserID:       userID,
 		Amount:       payAmount,
 		GiftedAmount: creditAmount - payAmount,
 		Channel:      channel,
-		Status:       "success",
+		Status:       "pending",
 	}
 	if record.GiftedAmount < 0 {
 		record.GiftedAmount = 0
@@ -181,19 +182,21 @@ func (s *UserService) RechargeByPlan(userID uint, planID int, channel string) (*
 		return nil, err
 	}
 
-	// 更新余额（到账金额）
-	if creditAmount > 0 {
-		if err := s.repo.UpdateBalance(userID, creditAmount); err != nil {
-			fmt.Printf("update balance failed: %v\n", err)
-		}
-	}
+	// TODO: 调用微信支付接口，获取支付参数返回给前端
+	// 前端支付成功后，微信支付回调更新记录状态为 success，并执行以下逻辑：
 
+	// 更新余额（到账金额）
+	// if creditAmount > 0 {
+	// 	if err := s.repo.UpdateBalance(userID, creditAmount); err != nil {
+	// 		fmt.Printf("update balance failed: %v\n", err)
+	// 	}
+	// }
 	// 更新会员等级
-	if targetPlan.MemberLevel > user.MemberLevel {
-		if err := s.repo.UpdateMemberLevel(userID, targetPlan.MemberLevel); err != nil {
-			fmt.Printf("upgrade member level failed: %v\n", err)
-		}
-	}
+	// if targetPlan.MemberLevel > user.MemberLevel {
+	// 	if err := s.repo.UpdateMemberLevel(userID, targetPlan.MemberLevel); err != nil {
+	// 		fmt.Printf("upgrade member level failed: %v\n", err)
+	// 	}
+	// }
 
 	return record, nil
 }
@@ -212,23 +215,17 @@ func (s *UserService) Recharge(userID uint, amount int, channel string) (*model.
 	// 未匹配到标准档位，走旧逻辑（仅兼容1000元及以上）
 	if amount >= PrechargeMinimum {
 		gifted := int(float64(amount) * 0.2)
-		finalAmount := amount + gifted
 		record := &model.RechargeRecord{
 			UserID:       userID,
 			Amount:       amount,
 			GiftedAmount: gifted,
 			Channel:      channel,
-			Status:       "success",
+			Status:       "pending",
 		}
 		if err := s.rechargeRepo.Create(record); err != nil {
 			return nil, err
 		}
-		if err := s.repo.UpdateBalance(userID, finalAmount); err != nil {
-			fmt.Printf("update balance failed: %v\n", err)
-		}
-		if err := s.repo.UpdateMemberLevel(userID, 2); err != nil {
-			fmt.Printf("upgrade member level failed: %v\n", err)
-		}
+		// TODO: 微信支付回调后更新余额和会员等级
 		return record, nil
 	}
 	return nil, errors.New("不支持的充值金额，请选择标准充值档位")
@@ -376,6 +373,11 @@ func (s *UserService) CheckAndUpgradeMemberLevel(userID uint) error {
 // GetTotalRechargedAmount 获取用户累计充值金额（已完成的充值记录）
 func (s *UserService) GetTotalRechargedAmount(userID uint) (int, error) {
 	return s.rechargeRepo.GetTotalAmountByUserID(userID)
+}
+
+// GetRechargeRecords 获取用户充值记录列表
+func (s *UserService) GetRechargeRecords(userID uint, page, pageSize int) ([]model.RechargeRecord, int64, error) {
+	return s.rechargeRepo.ListByUserID(userID, page, pageSize)
 }
 
 func (s *UserService) GetMemberMultiplier(memberLevel int16) float64 {

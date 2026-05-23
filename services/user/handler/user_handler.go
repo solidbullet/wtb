@@ -150,6 +150,22 @@ func (h *UserHandler) ListRechargePlans(c *gin.Context) {
 	response.Success(c, plans)
 }
 
+// GetRechargeRecords GET /api/user/recharge-records
+func (h *UserHandler) GetRechargeRecords(c *gin.Context) {
+	userID := c.GetString("user_id")
+	id, _ := strconv.ParseUint(userID, 10, 64)
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
+
+	list, total, err := h.svc.GetRechargeRecords(uint(id), page, pageSize)
+	if err != nil {
+		response.Error(c, 50001, "获取充值记录失败")
+		return
+	}
+
+	response.SuccessPage(c, total, page, pageSize, list)
+}
+
 // GetUpgradeInfo GET /api/user/upgrade-info
 func (h *UserHandler) GetUpgradeInfo(c *gin.Context) {
 	userID := c.GetString("user_id")

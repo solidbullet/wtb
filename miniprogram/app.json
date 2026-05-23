@@ -8,6 +8,7 @@
     "pages/points/index/index",
     "pages/activity/list/index",
     "pages/mine/orders/index",
+    "pages/mine/recharges/index",
     "pages/mine/pets/index",
     "pages/boarding/index"
   ],

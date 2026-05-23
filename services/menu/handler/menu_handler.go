@@ -15,6 +15,13 @@ import (
 	"github.com/wtb-ordering/services/menu/service"
 )
 
+func getImageDir() string {
+	if dir := os.Getenv("IMAGE_PATH"); dir != "" {
+		return dir
+	}
+	return filepath.Join("..", "miniprogram", "images")
+}
+
 type MenuHandler struct {
 	svc *service.MenuService
 }
@@ -312,7 +319,7 @@ func (h *MenuHandler) DeleteDish(c *gin.Context) {
 	if imagePath != "" {
 		filename := strings.TrimPrefix(imagePath, "/images/")
 		if filename != imagePath {
-			filePath := filepath.Join("..", "miniprogram", "images", filename)
+			filePath := filepath.Join(getImageDir(), filename)
 			os.Remove(filePath)
 		}
 	}
@@ -332,7 +339,7 @@ func (h *MenuHandler) UploadImage(c *gin.Context) {
 		ext = ".png"
 	}
 	filename := fmt.Sprintf("dish_%d_%d%s", time.Now().Unix(), rand.Intn(10000), ext)
-	dst := filepath.Join("..", "miniprogram", "images", filename)
+	dst := filepath.Join(getImageDir(), filename)
 	if err := c.SaveUploadedFile(file, dst); err != nil {
 		response.Error(c, 50001, "保存图片失败: "+err.Error())
 		return

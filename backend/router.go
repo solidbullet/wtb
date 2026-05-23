@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/wtb-ordering/backend/middleware"
@@ -59,7 +60,11 @@ func setupRouter(h *Handlers, userRepo *repository.UserRepo) *gin.Engine {
 	})
 
 	// 静态图片服务（菜品图片、头像等）
-	r.Static("/images", "../miniprogram/images")
+	imagePath := os.Getenv("IMAGE_PATH")
+	if imagePath == "" {
+		imagePath = "../miniprogram/images"
+	}
+	r.Static("/images", imagePath)
 
 	// 鉴权中间件
 	auth := middleware.OpenIDAuth(userRepo)
@@ -117,6 +122,7 @@ func setupRouter(h *Handlers, userRepo *repository.UserRepo) *gin.Engine {
 		userAuth.GET("/consumption/summary", h.User.GetConsumptionSummary)
 		userAuth.POST("/recharge", h.User.Recharge)
 		userAuth.GET("/recharge-plans", h.User.ListRechargePlans)
+		userAuth.GET("/recharge-records", h.User.GetRechargeRecords)
 		userAuth.GET("/upgrade-info", h.User.GetUpgradeInfo)
 		userAuth.GET("/pets", h.User.ListPets)
 		userAuth.POST("/pets", h.User.AddPet)

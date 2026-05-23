@@ -99,7 +99,16 @@ Page({
       return
     }
 
-    // 构建确认弹窗内容
+    // 支付接口尚未开发，提示用户
+    wx.showModal({
+      title: '支付功能开发中',
+      content: '微信支付接口正在开发中，暂时无法完成充值。\n\n如需充值请联系门店前台或关注后续更新。',
+      showCancel: false,
+      confirmText: '我知道了'
+    })
+
+    // 等支付接口开发完成后，再启用以下逻辑：
+    /*
     const isUpgrade = totalRecharged > 0
     const title = isUpgrade ? '升级充值' : plan.name
     const contentLines = []
@@ -134,7 +143,6 @@ Page({
               title: isUpgrade ? '升级成功' : (plan.id === 1 ? '会员开通成功' : '充值成功'),
               icon: 'success'
             })
-            // 刷新数据
             this.loadData()
           } catch (e) {
             wx.hideLoading()
@@ -143,5 +151,6 @@ Page({
         }
       }
     })
+    */
   }
 })

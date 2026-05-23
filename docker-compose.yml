@@ -25,9 +25,12 @@ services:
     container_name: wtb-backend
     environment:
       DB_DSN: "host=postgres user=admin password=wtb123456 port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+      IMAGE_PATH: "./images"
       # 如需真实微信登录，请填写你的小程序 AppID 和 AppSecret
       # WX_APPID: "wx1e4315d1974c72f6"
       # WX_APPSECRET: "your_app_secret_here"
+    volumes:
+      - ./miniprogram/images:/app/images
     networks:
       - wtb-network
     restart: unless-stopped
