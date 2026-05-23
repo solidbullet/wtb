@@ -22,7 +22,7 @@ var serviceMap = map[string]string{
 	"payment":  "http://localhost:8085",
 }
 
-var adminPassword = "admin123"
+var adminPassword = "1234"
 
 type AdminHandler struct {
 	client *http.Client

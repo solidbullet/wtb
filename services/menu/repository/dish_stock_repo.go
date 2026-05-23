@@ -31,3 +31,7 @@ func (r *DishStockRepo) UpdateSoldCount(dishID uint, date time.Time, count int) 
 	return r.db.Model(&model.DishStock{}).Where("dish_id = ? AND date = ?", dishID, date).
 		UpdateColumn("sold_count", gorm.Expr("sold_count + ?", count)).Error
 }
+
+func (r *DishStockRepo) DeleteByDishID(dishID uint) error {
+	return r.db.Where("dish_id = ?", dishID).Delete(&model.DishStock{}).Error
+}

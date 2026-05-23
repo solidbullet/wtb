@@ -1,7 +1,12 @@
 package handler
 
 import (
+	"fmt"
+	"math/rand"
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -290,11 +295,52 @@ func (h *MenuHandler) UpdateDish(c *gin.Context) {
 // DeleteDish DELETE /api/menu/admin/dish/:id
 func (h *MenuHandler) DeleteDish(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+
+	// 先查询菜品，获取图片路径
+	dish, _, _, err := h.svc.GetDish(uint(id))
+	imagePath := ""
+	if err == nil && dish != nil && dish.Images != "" {
+		imagePath = dish.Images
+	}
+
 	if err := h.svc.DeleteDish(uint(id)); err != nil {
 		response.Error(c, 50001, err.Error())
 		return
 	}
+
+	// 删除对应的图片文件
+	if imagePath != "" {
+		filename := strings.TrimPrefix(imagePath, "/images/")
+		if filename != imagePath {
+			filePath := filepath.Join("..", "miniprogram", "images", filename)
+			os.Remove(filePath)
+		}
+	}
+
 	response.Success(c, gin.H{"id": id})
+}
+
+// UploadImage POST /api/menu/admin/upload
+func (h *MenuHandler) UploadImage(c *gin.Context) {
+	file, err := c.FormFile("file")
+	if err != nil {
+		response.Error(c, 40001, "请选择图片文件")
+		return
+	}
+	ext := filepath.Ext(file.Filename)
+	if ext == "" {
+		ext = ".png"
+	}
+	filename := fmt.Sprintf("dish_%d_%d%s", time.Now().Unix(), rand.Intn(10000), ext)
+	dst := filepath.Join("..", "miniprogram", "images", filename)
+	if err := c.SaveUploadedFile(file, dst); err != nil {
+		response.Error(c, 50001, "保存图片失败: "+err.Error())
+		return
+	}
+	response.Success(c, gin.H{
+		"url":      "/images/" + filename,
+		"filename": filename,
+	})
 }
 
 // SetStock POST /api/menu/admin/stock

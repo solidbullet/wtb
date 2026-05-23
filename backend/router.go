@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/wtb-ordering/backend/middleware"
 	activityhandler "github.com/wtb-ordering/services/activity/handler"
@@ -15,6 +17,24 @@ import (
 	userhandler "github.com/wtb-ordering/services/user/handler"
 	"github.com/wtb-ordering/services/user/repository"
 )
+
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		origin := c.Request.Header.Get("Origin")
+		if origin == "" {
+			origin = "*"
+		}
+		c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+		c.Next()
+	}
+}
 
 type Handlers struct {
 	User      *userhandler.UserHandler
@@ -31,6 +51,7 @@ type Handlers struct {
 
 func setupRouter(h *Handlers, userRepo *repository.UserRepo) *gin.Engine {
 	r := gin.Default()
+	r.Use(CORSMiddleware())
 
 	// 健康检查
 	r.GET("/health", func(c *gin.Context) {
@@ -122,6 +143,7 @@ func setupRouter(h *Handlers, userRepo *repository.UserRepo) *gin.Engine {
 		menuAdmin.PUT("/dish/:id", h.Menu.UpdateDish)
 		menuAdmin.DELETE("/dish/:id", h.Menu.DeleteDish)
 		menuAdmin.POST("/stock", h.Menu.SetStock)
+		menuAdmin.POST("/upload", h.Menu.UploadImage)
 	}
 
 	// order auth
@@ -219,11 +241,16 @@ func setupRouter(h *Handlers, userRepo *repository.UserRepo) *gin.Engine {
 		analyticsAuth.POST("/export", h.Analytics.Export)
 	}
 
-	// admin
-	adminAPI := r.Group("/api/admin")
-	adminAPI.Use(auth)
+	// admin rewrite — 把 /api/admin/xxx 映射到 /api/xxx，统一走本地 handler
+	adminRewrite := r.Group("/api/admin")
+	adminRewrite.Use(auth)
 	{
-		adminAPI.Any("/*path", h.Admin.Proxy)
+		adminRewrite.Any("/*path", func(c *gin.Context) {
+			path := c.Param("path")
+			c.Request.URL.Path = "/api" + path
+			c.Request.RequestURI = "/api" + path
+			r.HandleContext(c)
+		})
 	}
 
 	return r

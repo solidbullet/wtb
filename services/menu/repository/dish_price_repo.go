@@ -22,3 +22,7 @@ func (r *DishPriceRepo) ListByDishID(dishID uint) ([]model.DishPrice, error) {
 	err := r.db.Where("dish_id = ?", dishID).Find(&prices).Error
 	return prices, err
 }
+
+func (r *DishPriceRepo) DeleteByDishID(dishID uint) error {
+	return r.db.Where("dish_id = ?", dishID).Delete(&model.DishPrice{}).Error
+}

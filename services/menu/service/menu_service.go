@@ -124,6 +124,12 @@ func (s *MenuService) UpdateDish(id uint, categoryID uint, name, subtitle, descr
 }
 
 func (s *MenuService) DeleteDish(id uint) error {
+	if err := s.priceRepo.DeleteByDishID(id); err != nil {
+		return err
+	}
+	if err := s.stockRepo.DeleteByDishID(id); err != nil {
+		return err
+	}
 	return s.dishRepo.Delete(id)
 }
 

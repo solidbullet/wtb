@@ -5,7 +5,7 @@ import './Login.css'
 
 export default function Login() {
   const [user, setUser] = useState('admin')
-  const [pass, setPass] = useState('admin123')
+  const [pass, setPass] = useState('1234')
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
