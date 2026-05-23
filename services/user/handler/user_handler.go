@@ -246,8 +246,11 @@ func (h *UserHandler) AddPet(c *gin.Context) {
 	var req struct {
 		Name     string  `json:"name"`
 		Breed    string  `json:"breed"`
+		Gender   string  `json:"gender"`
 		Weight   float64 `json:"weight"`
-		Birthday *string `json:"birthday"`
+		Birthday string  `json:"birthday"`
+		PhotoURL string  `json:"photo_url"`
+		Notes    string  `json:"notes"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, 40001, "参数错误")
@@ -257,7 +260,7 @@ func (h *UserHandler) AddPet(c *gin.Context) {
 	userID := c.GetString("user_id")
 	id, _ := strconv.ParseUint(userID, 10, 64)
 
-	pet, err := h.svc.AddPet(uint(id), req.Name, req.Breed, req.Weight, req.Birthday)
+	pet, err := h.svc.AddPet(uint(id), req.Name, req.Breed, req.Gender, req.Weight, req.Birthday, req.PhotoURL, req.Notes)
 	if err != nil {
 		response.Error(c, 50001, err.Error())
 		return

@@ -348,7 +348,7 @@ func (s *UserService) ListPets(userID uint) ([]model.PetProfile, error) {
 	return s.petRepo.ListByUserID(userID)
 }
 
-func (s *UserService) AddPet(userID uint, name, breed string, weight float64, birthday *string) (*model.PetProfile, error) {
+func (s *UserService) AddPet(userID uint, name, breed, gender string, weight float64, birthday, photoURL, notes string) (*model.PetProfile, error) {
 	if name == "" {
 		return nil, errors.New("宠物名不能为空")
 	}
@@ -356,13 +356,23 @@ func (s *UserService) AddPet(userID uint, name, breed string, weight float64, bi
 		UserID:   userID,
 		Name:     name,
 		Breed:    breed,
+		Gender:   gender,
 		Weight:   weight,
-		Birthday: birthday,
+		Birthday: strPtr(birthday),
+		PhotoURL: photoURL,
+		Notes:    notes,
 	}
 	if err := s.petRepo.Create(pet); err != nil {
 		return nil, err
 	}
 	return pet, nil
+}
+
+func strPtr(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
 }
 
 func (s *UserService) CheckAndUpgradeMemberLevel(userID uint) error {

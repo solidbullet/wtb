@@ -21,6 +21,6 @@ Page({
     }
   },
   addPet() {
-    wx.showToast({ title: '添加宠物功能开发中', icon: 'none' })
+    wx.navigateTo({ url: '/pages/mine/pets/add' })
   }
 })

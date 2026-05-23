@@ -1,0 +1,70 @@
+<view class="container add-pet-page">
+  <view class="form-card">
+    <view class="form-title">🐾 宠物信息</view>
+
+    <!-- 照片上传 -->
+    <view class="form-item photo-item">
+      <view class="photo-wrapper" bindtap="choosePhoto">
+        <image wx:if="{{photoUrl}}" class="pet-photo" src="{{photoUrl}}" mode="aspectFill" />
+        <view wx:else class="photo-placeholder">
+          <text class="photo-icon">📷</text>
+          <text class="photo-tip">添加照片（可选）</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 名字 -->
+    <view class="form-item">
+      <text class="label required">宠物名字</text>
+      <input class="input" placeholder="如：旺财" value="{{name}}" bindinput="onNameInput" maxlength="20" />
+    </view>
+
+    <!-- 品种 -->
+    <view class="form-item">
+      <text class="label required">品种</text>
+      <picker mode="selector" range="{{breedOptions}}" bindchange="onBreedChange">
+        <view class="picker {{breed?'':'placeholder'}}">
+          {{breed||'请选择品种'}}
+          <text class="arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 性别 -->
+    <view class="form-item">
+      <text class="label">性别</text>
+      <view class="radio-group">
+        <view class="radio {{gender==='male'?'active':''}}" bindtap="onGenderChange" data-gender="male">♂ 公</view>
+        <view class="radio {{gender==='female'?'active':''}}" bindtap="onGenderChange" data-gender="female">♀ 母</view>
+      </view>
+    </view>
+
+    <!-- 体重 -->
+    <view class="form-item">
+      <text class="label">体重 (kg)</text>
+      <input class="input" type="digit" placeholder="如：12.5" value="{{weight}}" bindinput="onWeightInput" />
+    </view>
+
+    <!-- 生日 -->
+    <view class="form-item">
+      <text class="label">生日</text>
+      <picker mode="date" bindchange="onBirthdayChange">
+        <view class="picker {{birthday?'':'placeholder'}}">
+          {{birthday||'请选择生日'}}
+          <text class="arrow">›</text>
+        </view>
+      </picker>
+    </view>
+  </view>
+
+  <!-- 注意事项 -->
+  <view class="form-card">
+    <view class="form-title">📋 寄养注意事项</view>
+    <view class="form-item">
+      <textarea class="textarea" placeholder="如：\n• 每天需要遛两次\n• 对鸡肉过敏\n• 害怕雷声\n• 需要吃处方粮\n\n请填写寄养期间我们需要特别关注的信息" value="{{notes}}" bindinput="onNotesInput" maxlength="500" />
+      <text class="char-count">{{notes.length||0}}/500</text>
+    </view>
+  </view>
+
+  <view class="submit-btn" bindtap="submit">保存</view>
+</view>

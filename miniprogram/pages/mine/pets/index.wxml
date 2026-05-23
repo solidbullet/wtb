@@ -1,10 +1,10 @@
 <view class="container pets-page">
   <view class="pet-card" wx:for="{{pets}}" wx:key="id">
-    <image class="pet-avatar" src="{{item.avatar||defaultAvatar}}" mode="aspectFill" />
+    <image class="pet-avatar" src="{{item.photo_url||defaultAvatar}}" mode="aspectFill" />
     <view class="pet-info">
       <text class="pet-name">{{item.name}}</text>
-      <text class="pet-meta">{{item.breed}} · {{item.age}}岁 · {{item.gender==='male'?'公':'母'}}</text>
-      <text class="pet-note">{{item.note||''}}</text>
+      <text class="pet-meta">{{item.breed}} {{item.gender==='male'?'♂':(item.gender==='female'?'♀':'')}} {{item.weight?item.weight+'kg':''}}</text>
+      <text class="pet-note" wx:if="{{item.notes}}">{{item.notes}}</text>
     </view>
   </view>
   <view class="empty" wx:if="{{pets.length===0}}">
