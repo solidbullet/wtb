@@ -38,7 +38,7 @@ Page({
       const file = res.tempFiles[0]
       wx.showLoading({ title: '上传中...' })
       const token = wx.getStorageSync('token') || ''
-      const uploadRes = await wx.uploadFile({
+      const uploadRes = await this.uploadFilePromise({
         url: `${API_BASE}/api/menu/admin/upload`,
         filePath: file.tempFilePath,
         name: 'file',
@@ -55,6 +55,16 @@ Page({
       wx.hideLoading()
       wx.showToast({ title: err.message || '上传失败', icon: 'none' })
     }
+  },
+
+  uploadFilePromise(options) {
+    return new Promise((resolve, reject) => {
+      const task = wx.uploadFile({
+        ...options,
+        success: resolve,
+        fail: reject
+      })
+    })
   },
 
   // 提交添加宠物

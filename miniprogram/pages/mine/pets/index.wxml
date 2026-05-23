@@ -1,5 +1,5 @@
 <view class="container pets-page">
-  <view class="pet-card" wx:for="{{pets}}" wx:key="id">
+  <view class="pet-card" wx:for="{{pets}}" wx:key="id" bindtap="showPetDetail" data-pet="{{item}}">
     <image class="pet-avatar" src="{{item.photo_url||defaultAvatar}}" mode="aspectFill" />
     <view class="pet-info">
       <text class="pet-name">{{item.name}}</text>
