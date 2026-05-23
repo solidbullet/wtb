@@ -1,0 +1,35 @@
+<view class="container orders-page">
+  <view class="order-tabs">
+    <view class="tab {{currentTab==='all'?'active':''}}" bindtap="switchTab" data-tab="all">全部</view>
+    <view class="tab {{currentTab==='pending'?'active':''}}" bindtap="switchTab" data-tab="pending">待支付</view>
+    <view class="tab {{currentTab==='paid'?'active':''}}" bindtap="switchTab" data-tab="paid">进行中</view>
+    <view class="tab {{currentTab==='completed'?'active':''}}" bindtap="switchTab" data-tab="completed">已完成</view>
+  </view>
+
+  <view class="order-list" wx:if="{{orders.length>0}}">
+    <view class="order-card" wx:for="{{orders}}" wx:key="id">
+      <view class="order-header">
+        <view class="order-header-left">
+          <text class="order-no">订单号: {{item.order_no}}</text>
+          <text class="order-seat" wx:if="{{item.seat_id}}">🪑 桌号: {{item.seat_id}}</text>
+        </view>
+        <text class="order-status {{item.status}}">{{statusText[item.status]}}</text>
+      </view>
+      <view class="order-items">
+        <view class="item-row" wx:for="{{item.items}}" wx:for-item="it" wx:key="id">
+          <text class="item-name">{{it.dish_name}}</text>
+          <text class="item-qty">x{{it.quantity}}</text>
+          <text class="item-price">¥{{it.unit_price/100}}</text>
+        </view>
+      </view>
+      <view class="order-footer">
+        <text class="order-time">{{item.created_at}}</text>
+        <text class="order-total">¥{{item.total_amount/100}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{orders.length===0}}">
+    <text>暂无订单</text>
+  </view>
+</view>

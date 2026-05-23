@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: wtb-postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: wtb123456
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - wtb-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wtb-backend
+    environment:
+      DB_DSN: "host=postgres user=admin password=wtb123456 port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+      # 如需真实微信登录，请填写你的小程序 AppID 和 AppSecret
+      # WX_APPID: "wx1e4315d1974c72f6"
+      # WX_APPSECRET: "your_app_secret_here"
+    networks:
+      - wtb-network
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: wtb-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - wtb-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
+
+networks:
+  wtb-network:

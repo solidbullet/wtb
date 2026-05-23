@@ -1,0 +1,17 @@
+.activity-page { padding-bottom: 40rpx; }
+.activity-list { display: flex; flex-direction: column; gap: 24rpx; }
+.activity-card { background: #fff; border-radius: 20rpx; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+.act-img { width: 100%; height: 300rpx; background: #eee; }
+.act-info { padding: 24rpx; }
+.act-title { font-size: 32rpx; font-weight: 600; color: #3D3D3D; display: block; }
+.act-meta { font-size: 24rpx; color: #999; display: block; margin-top: 8rpx; }
+.act-progress { display: flex; align-items: center; gap: 12rpx; margin-top: 16rpx; }
+.act-progress-bar { flex: 1; height: 12rpx; background: #eee; border-radius: 6rpx; overflow: hidden; }
+.act-progress-fill { height: 100%; background: #E88D2E; border-radius: 6rpx; }
+.act-progress-text { font-size: 22rpx; color: #999; flex-shrink: 0; }
+.act-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 20rpx; }
+.act-status { font-size: 24rpx; font-weight: 600; }
+.act-status.open { color: #5B8C5A; }
+.act-status.closed { color: #999; }
+.act-btn { background: #E88D2E; color: #fff; font-size: 26rpx; padding: 10rpx 32rpx; border-radius: 30rpx; }
+.act-btn.disabled { background: #ccc; }

@@ -1,0 +1,54 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/order/menu",
+    "pages/order/confirm/index",
+    "pages/recharge/recharge",
+    "pages/mine/mine",
+    "pages/points/index/index",
+    "pages/activity/list/index",
+    "pages/mine/orders/index",
+    "pages/mine/pets/index",
+    "pages/boarding/index"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#F9F6F0",
+    "navigationBarTitleText": "汪托帮",
+    "navigationBarTextStyle": "black"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#E88D2E",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "/images/tab_home.png",
+        "selectedIconPath": "/images/tab_home_active.png"
+      },
+      {
+        "pagePath": "pages/order/menu",
+        "text": "点餐",
+        "iconPath": "/images/tab_order.png",
+        "selectedIconPath": "/images/tab_order_active.png"
+      },
+      {
+        "pagePath": "pages/recharge/recharge",
+        "text": "充值优惠",
+        "iconPath": "/images/tab_recharge.png",
+        "selectedIconPath": "/images/tab_recharge_active.png"
+      },
+      {
+        "pagePath": "pages/mine/mine",
+        "text": "我的",
+        "iconPath": "/images/tab_mine.png",
+        "selectedIconPath": "/images/tab_mine_active.png"
+      }
+    ]
+  },
+  "cloud": true,
+  "sitemapLocation": "sitemap.json"
+}

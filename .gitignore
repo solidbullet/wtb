@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+backend/backend
+backend/backend-linux
+gateway/gateway
+gateway/gateway-service
+services/*/*-service
+
+# Test binary
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Logs
+*.log
+
+# Environment variables
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Admin web build
+dist/

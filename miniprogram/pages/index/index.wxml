@@ -1,0 +1,158 @@
+<view class="container">
+  <!-- ===== 1. 品牌头 ===== -->
+  <view class="brand-header">
+    <view class="brand-left">
+      <view class="brand-logo">🐕</view>
+      <view>
+        <view class="brand-name">汪托帮</view>
+        <view class="brand-sub">山水宠物俱乐部 · 杨梅树下的自由天地</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ===== 2. 场景氛围轮播 ===== -->
+  <swiper class="scene-slider" indicator-dots="{{true}}" autoplay="{{true}}" interval="4000" circular="{{true}}">
+    <swiper-item>
+      <view class="scene-slide scene-1">
+        <view class="scene-content">
+          <text class="scene-tag">🌳 杨梅树下</text>
+          <text class="scene-title">夏日天然氧吧</text>
+          <text class="scene-desc">斑驳树影里打盹，山风拂面</text>
+        </view>
+      </view>
+    </swiper-item>
+    <swiper-item>
+      <view class="scene-slide scene-2">
+        <view class="scene-content">
+          <text class="scene-tag">🏕️ 千平草坪</text>
+          <text class="scene-title">奔跑不用看主人脸色</text>
+          <text class="scene-desc">释放天性，不做笼中犬</text>
+        </view>
+      </view>
+    </swiper-item>
+    <swiper-item>
+      <view class="scene-slide scene-3">
+        <view class="scene-content">
+          <text class="scene-tag">🛏️ 温馨寄养间</text>
+          <text class="scene-title">空调恒温 专人看护</text>
+          <text class="scene-desc">白天撒欢够了，晚上睡个好觉</text>
+        </view>
+      </view>
+    </swiper-item>
+  </swiper>
+
+  <!-- ===== 3. 四大核心业务 ===== -->
+  <view class="section">
+    <view class="section-header">
+      <view class="section-title"><view class="accent-bar"></view>我们的服务</view>
+    </view>
+    <view class="service-grid">
+      <view class="service-card" bindtap="goBoarding">
+        <view class="service-icon">🏠</view>
+        <view class="service-name">宠物寄养</view>
+        <view class="service-desc">不关笼子，自由奔跑</view>
+      </view>
+      <view class="service-card" bindtap="goCheckup">
+        <view class="service-icon">🏥</view>
+        <view class="service-name">宠物体检</view>
+        <view class="service-desc">专业设备，健康档案</view>
+      </view>
+      <view class="service-card" bindtap="goDaycare">
+        <view class="service-icon">🌞</view>
+        <view class="service-name">宠物日托</view>
+        <view class="service-desc">白天托管，晚上接回</view>
+      </view>
+      <view class="service-card gold" bindtap="goFullcare">
+        <view class="service-icon">👑</view>
+        <view class="service-name">宠物全托</view>
+        <view class="service-desc">万元年卡，全年无忧</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ===== 4. 核心优势对比 ===== -->
+  <view class="section">
+    <view class="section-header">
+      <view class="section-title"><view class="accent-bar"></view>为什么选汪托帮</view>
+    </view>
+    <view class="advantage-card">
+      <view class="adv-row">
+        <view class="adv-item adv-day">
+          <view class="adv-icon">☀️</view>
+          <view class="adv-label">白天撒欢</view>
+          <view class="adv-text">千平大草坪任意奔跑</view>
+          <view class="adv-text">杨梅树下乘凉社交</view>
+          <view class="adv-highlight">不是关在笼子里发呆</view>
+        </view>
+        <view class="adv-connector">
+          <view class="adv-arrow">→</view>
+          <view class="adv-words">自由生活</view>
+        </view>
+        <view class="adv-item adv-night">
+          <view class="adv-icon">🌙</view>
+          <view class="adv-label">晚上安睡</view>
+          <view class="adv-text">独立温馨寄养房间</view>
+          <view class="adv-text">空调恒温 24h监控</view>
+          <view class="adv-highlight">不是关在笼子里过夜</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ===== 5. 全托 VIP 专属卡片 ===== -->
+  <view class="vip-section" bindtap="goFullcare">
+    <view class="vip-card">
+      <view class="vip-left">
+        <view class="vip-badge">👑 年度会员</view>
+        <view class="vip-title">宠物全托</view>
+        <view class="vip-price">¥10,000 <text class="vip-unit">/ 全年</text></view>
+        <view class="vip-tags">
+          <text class="vip-tag">全年任意寄养</text>
+          <text class="vip-tag">无限次日托</text>
+          <text class="vip-tag">专属管家</text>
+        </view>
+      </view>
+      <view class="vip-right">
+        <view class="vip-action">了解详情 ›</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ===== 6. 快捷入口 ===== -->
+  <!-- <view class="quick-grid">
+    <view class="quick-card orange" bindtap="goMenu">
+      <text class="quick-title">🍖 开始点餐</text>
+      <text class="quick-desc">人宠共享美食</text>
+      <text class="quick-arrow">›</text>
+    </view>
+    <view class="quick-card green" bindtap="goRecharge">
+      <text class="quick-title">💳 充值优惠</text>
+      <text class="quick-desc">会员价更划算</text>
+      <text class="quick-arrow">›</text>
+    </view>
+  </view> -->
+
+  <!-- ===== 7. 近期活动 ===== -->
+  <view class="section" wx:if="{{activities.length > 0}}">
+    <view class="section-header">
+      <view class="section-title"><view class="accent-bar"></view>近期活动</view>
+      <view class="section-more" bindtap="goActivities">查看全部 ›</view>
+    </view>
+    <view class="activity-list">
+      <view class="activity-card" wx:for="{{activities}}" wx:key="id" bindtap="goActivityDetail" data-id="{{item.id}}">
+        <view class="activity-thumb">
+          <image wx:if="{{item.image}}" class="thumb-img" src="{{item.image}}" mode="aspectFill"></image>
+          <view wx:else class="thumb-img" style="background: linear-gradient(135deg, #D4C8B8, #C4B8A8);">🐶</view>
+        </view>
+        <view class="activity-body">
+          <text class="activity-name">{{item.title}}</text>
+          <view class="activity-meta">
+            <text>📅 {{item.event_time}}</text>
+            <text>📍 {{item.location}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+  <view class="empty-hint" wx:if="{{activities.length === 0}}">暂无活动</view>
+</view>

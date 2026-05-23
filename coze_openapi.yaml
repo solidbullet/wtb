@@ -1,0 +1,335 @@
+openapi: "3.0.3"
+info:
+  title: "汪托帮营业数据查询"
+  description: |
+    为餐厅老板提供营业数据查询接口，支持营收、订单、菜品、会员、积分等统计。
+    供 Coze 智能体调用，回答自然语言查询。
+  version: "1.0.0"
+servers:
+  - url: "https://wtb.lqqnw.cn"
+    description: "生产环境"
+  - url: "http://localhost:8089"
+    description: "本地开发"
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /api/analytics/dashboard:
+    get:
+      summary: "今日营业总览"
+      description: |
+        查询今日及本月关键营业指标，包括营收总额、订单数、客单价、新用户、充值总额。
+        当用户问"今天营业情况怎么样"、"今天赚了多少钱"、"今天卖了多少单"、"今天有多少人充值"时调用此接口。
+      operationId: "getDashboard"
+      responses:
+        "200":
+          description: "查询成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+        "401":
+          description: "API Key 无效"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/analytics/revenue:
+    get:
+      summary: "营收统计"
+      description: |
+        查询营收明细，支持按日期范围统计每日营收和订单数。
+        当用户问"今天的充值总额是多少"、"最近一周营收多少"、"本月收入情况"时调用此接口。
+      operationId: "getRevenue"
+      parameters:
+        - name: "start_date"
+          in: "query"
+          description: "开始日期，格式 YYYY-MM-DD，默认 6 天前"
+          schema:
+            type: "string"
+            format: "date"
+        - name: "end_date"
+          in: "query"
+          description: "结束日期，格式 YYYY-MM-DD，默认今天"
+          schema:
+            type: "string"
+            format: "date"
+      responses:
+        "200":
+          description: "查询成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RevenueResponse"
+        "401":
+          description: "API Key 无效"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/analytics/orders:
+    get:
+      summary: "订单统计"
+      description: |
+        查询订单统计与列表，包括总单数、完成单数、取消单数、总金额。
+        当用户问"今天卖了多少单"、"今天有多少订单取消了"、"今天订单总额多少"时调用此接口。
+      operationId: "getOrders"
+      parameters:
+        - name: "date"
+          in: "query"
+          description: "查询日期，格式 YYYY-MM-DD，默认今天"
+          schema:
+            type: "string"
+            format: "date"
+        - name: "status"
+          in: "query"
+          description: "按状态筛选，如 completed, cancelled"
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "查询成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrdersResponse"
+        "401":
+          description: "API Key 无效"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/analytics/dishes:
+    get:
+      summary: "菜品销售排行"
+      description: |
+        查询菜品销售排行，按销量排序。
+        当用户问"最受欢迎的菜品是什么"、"今天什么卖得最好"、"菜品销量排行"时调用此接口。
+      operationId: "getDishes"
+      parameters:
+        - name: "date"
+          in: "query"
+          description: "查询日期，格式 YYYY-MM-DD，默认今天"
+          schema:
+            type: "string"
+            format: "date"
+        - name: "limit"
+          in: "query"
+          description: "返回条数，默认 10"
+          schema:
+            type: "integer"
+            default: 10
+      responses:
+        "200":
+          description: "查询成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DishesResponse"
+        "401":
+          description: "API Key 无效"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/analytics/members:
+    get:
+      summary: "会员/用户统计"
+      description: |
+        查询用户与会员统计，包括总用户数、普通用户、会员、充值会员、今日新增。
+        当用户问"有多少会员"、"今天新增几个用户"、"会员占比多少"时调用此接口。
+      operationId: "getMembers"
+      responses:
+        "200":
+          description: "查询成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MembersResponse"
+        "401":
+          description: "API Key 无效"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/analytics/points:
+    get:
+      summary: "积分统计"
+      description: |
+        查询积分发放与兑换统计。
+        当用户问"今天积分发放了多少"、"积分兑换情况"、"人均积分多少"时调用此接口。
+      operationId: "getPoints"
+      responses:
+        "200":
+          description: "查询成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PointsResponse"
+        "401":
+          description: "API Key 无效"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: "apiKey"
+      in: "header"
+      name: "X-API-Key"
+
+  schemas:
+    DashboardResponse:
+      type: "object"
+      properties:
+        today:
+          $ref: "#/components/schemas/DashboardStats"
+        this_month:
+          $ref: "#/components/schemas/DashboardStats"
+
+    DashboardStats:
+      type: "object"
+      properties:
+        revenue:
+          type: "integer"
+          description: "营收总额，单位：分"
+        orders:
+          type: "integer"
+          description: "订单数"
+        avg_order:
+          type: "integer"
+          description: "客单价，单位：分"
+        new_users:
+          type: "integer"
+          description: "新用户数"
+        recharge_amount:
+          type: "integer"
+          description: "充值总额，单位：分"
+
+    RevenueResponse:
+      type: "object"
+      properties:
+        total_revenue:
+          type: "integer"
+          description: "总营收，单位：分"
+        total_orders:
+          type: "integer"
+        avg_order_amount:
+          type: "integer"
+          description: "平均客单价，单位：分"
+        daily:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/DailyRevenue"
+
+    DailyRevenue:
+      type: "object"
+      properties:
+        date:
+          type: "string"
+          format: "date"
+        revenue:
+          type: "integer"
+          description: "当日营收，单位：分"
+        orders:
+          type: "integer"
+
+    OrdersResponse:
+      type: "object"
+      properties:
+        total:
+          type: "integer"
+        completed:
+          type: "integer"
+        cancelled:
+          type: "integer"
+        total_amount:
+          type: "integer"
+          description: "订单总金额，单位：分"
+        list:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/OrderItem"
+
+    OrderItem:
+      type: "object"
+      properties:
+        order_no:
+          type: "string"
+        amount:
+          type: "integer"
+          description: "订单金额，单位：分"
+        status:
+          type: "string"
+        created_at:
+          type: "string"
+          format: "date-time"
+
+    DishesResponse:
+      type: "object"
+      properties:
+        total_sold:
+          type: "integer"
+          description: "今日总销量"
+        list:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/DishItem"
+
+    DishItem:
+      type: "object"
+      properties:
+        dish_id:
+          type: "integer"
+        dish_name:
+          type: "string"
+        total_quantity:
+          type: "integer"
+        total_amount:
+          type: "integer"
+          description: "销售总额，单位：分"
+
+    MembersResponse:
+      type: "object"
+      properties:
+        total_users:
+          type: "integer"
+        normal:
+          type: "integer"
+          description: "普通用户"
+        member:
+          type: "integer"
+          description: "会员"
+        recharge:
+          type: "integer"
+          description: "充值会员"
+        new_today:
+          type: "integer"
+          description: "今日新增"
+
+    PointsResponse:
+      type: "object"
+      properties:
+        total_granted:
+          type: "integer"
+          description: "今日发放积分"
+        total_exchanged:
+          type: "integer"
+          description: "今日兑换积分"
+        avg_per_user:
+          type: "integer"
+          description: "人均积分"
+
+    ErrorResponse:
+      type: "object"
+      properties:
+        error:
+          type: "string"

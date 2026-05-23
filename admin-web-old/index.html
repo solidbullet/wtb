@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>汪托帮后台管理</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:#f5f6fa;color:#333}
+.hidden{display:none!important}
+
+/* Login */
+#login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); position: relative; overflow: hidden;}
+#login-page::before { content: ""; position: absolute; width: 400px; height: 400px; background: rgba(255,255,255,0.08); border-radius: 50%; top: -100px; left: -100px; filter: blur(40px); }
+#login-page::after { content: ""; position: absolute; width: 300px; height: 300px; background: rgba(255,255,255,0.08); border-radius: 50%; bottom: -50px; right: -50px; filter: blur(40px); }
+.login-box{position: relative; z-index: 1; background:rgba(255,255,255,0.95); padding:48px 40px; border-radius:24px; box-shadow:0 20px 60px rgba(0,0,0,0.2); width:400px; text-align:center; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.5);}
+.login-box h1{font-size:28px; font-weight: 700; margin-bottom:8px; color: #1e3c72; letter-spacing: -0.5px;}
+.login-box p.subtitle {font-size: 15px; color: #64748b; margin-bottom: 32px;}
+.login-box .input-group { margin-bottom: 16px; text-align: left; }
+.login-box input{width:100%;padding:14px 16px;border:1px solid #e2e8f0;border-radius:12px;font-size:15px; transition: all 0.3s ease; background: #f8fafc; color: #1e293b;}
+.login-box input:focus{outline:none; border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);}
+.login-box button{width:100%;padding:14px;background:linear-gradient(to right, #1e3c72, #2a5298);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer; transition: all 0.3s ease; margin-top: 8px;}
+.login-box button:hover{transform: translateY(-2px); box-shadow: 0 8px 20px rgba(42, 82, 152, 0.3);}
+.login-box button:active{transform: translateY(0);}
+.error{color:#ef4444;font-size:13px;margin-top:12px; font-weight: 500; min-height: 20px;}
+
+/* App */
+.app{display:flex;min-height:100vh}
+.sidebar{width:220px;background:#1e1e2d;color:#fff;flex-shrink:0}
+.logo{padding:24px;font-size:20px;font-weight:700;border-bottom:1px solid #2d2d3a}
+.nav-item{display:block;padding:14px 24px;color:#a2a3b7;text-decoration:none;font-size:14px;border-left:3px solid transparent;cursor:pointer;background:none;border:none;width:100%;text-align:left}
+.nav-item:hover,.nav-item.active{background:#27273a;color:#fff;border-left-color:#667eea}
+.main{flex:1;display:flex;flex-direction:column}
+.topbar{height:60px;background:#fff;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;padding:0 24px;font-size:18px;font-weight:600}
+.content{padding:24px;flex:1;overflow-y:auto}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:24px}
+.stat-card{background:#fff;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.stat-label{font-size:14px;color:#999;margin-bottom:8px}
+.stat-value{font-size:32px;font-weight:700}
+
+/* Section */
+.section{background:#fff;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.section h3{font-size:16px;margin-bottom:16px}
+
+/* Table */
+.data-table{width:100%;border-collapse:collapse;font-size:14px}
+.data-table th{text-align:left;padding:12px;background:#f8f9fa;color:#666;font-weight:600;border-bottom:1px solid #e8e8e8}
+.data-table td{padding:12px;border-bottom:1px solid #f0f0f0}
+
+/* Buttons */
+.btn-primary{background:#667eea;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;margin-bottom:12px;margin-right:8px}
+.btn-primary:hover{background:#5a6fd6}
+.btn-danger{background:#e74c3c;color:#fff;border:none;padding:4px 10px;border-radius:4px;font-size:12px;cursor:pointer}
+
+/* Inline form */
+.inline-form{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;padding:16px;background:#f8f9fa;border-radius:8px}
+.inline-form input,.inline-form select{padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px}
+</style>
+</head>
+<body>
+
+<!-- Login Page -->
+<div id="login-page">
+  <div class="login-box">
+    <h1>汪托帮</h1>
+    <p class="subtitle">后台管理系统</p>
+    <div class="input-group">
+      <input type="text" id="login-user" placeholder="用户名" value="admin">
+    </div>
+    <div class="input-group">
+      <input type="password" id="login-pass" placeholder="密码" value="admin123">
+    </div>
+    <button onclick="doLogin()">进入系统</button>
+    <p id="login-error" class="error"></p>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app" class="hidden">
+  <main class="app">
+    <aside class="sidebar">
+      <div class="logo">汪托帮</div>
+      <button class="nav-item active" onclick="switchPage('dashboard',this)">📊 数据概览</button>
+      <button class="nav-item" onclick="switchPage('menu',this)">🍽️ 菜单管理</button>
+      <button class="nav-item" onclick="switchPage('orders',this)">📋 订单管理</button>
+      <button class="nav-item" onclick="switchPage('activity',this)">🎉 活动管理</button>
+      <button class="nav-item" onclick="switchPage('points',this)">⭐ 积分商品</button>
+      <button class="nav-item" onclick="logout()">🚪 退出登录</button>
+    </aside>
+    <div class="main">
+      <header class="topbar"><span id="page-title">数据概览</span></header>
+      <div class="content" id="content">
+
+          <!-- Dashboard -->
+        <div id="page-dashboard">
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-label">今日订单</div><div class="stat-value" id="stat-orders">0</div></div>
+            <div class="stat-card"><div class="stat-label">注册用户</div><div class="stat-value" id="stat-users">0</div></div>
+            <div class="stat-card"><div class="stat-label">菜品数量</div><div class="stat-value" id="stat-dishes">0</div></div>
+            <div class="stat-card"><div class="stat-label">活动数量</div><div class="stat-value" id="stat-activities">0</div></div>
+          </div>
+      </div>
+
+        <!-- Menu -->
+        <div id="page-menu" class="hidden">
+          <div class="section">
+            <h3>菜品分类</h3>
+            <div class="inline-form">
+              <input type="text" id="cat-name" placeholder="分类名称" onkeydown="if(event.key==='Enter') addCategory()">
+              <input type="number" id="cat-sort" placeholder="排序" style="width:80px" onkeydown="if(event.key==='Enter') addCategory()">
+              <button class="btn-primary" onclick="addCategory()">+ 新增分类</button>
+            </div>
+            <table class="data-table">
+              <thead><tr><th>ID</th><th>名称</th><th>排序</th><th>操作</th></tr></thead>
+              <tbody id="cat-list"></tbody>
+            </table>
+          </div>
+          <div class="section">
+            <h3>菜品列表</h3>
+            <div class="inline-form">
+              <input type="text" id="dish-name" placeholder="菜品名称">
+              <select id="dish-cat"><option value="">选择分类</option></select>
+              <input type="number" id="dish-price" placeholder="价格（分）" style="width:120px">
+              <input type="number" id="dish-stock" placeholder="库存" style="width:80px">
+              <input type="text" id="dish-tags" placeholder="标签" style="width:150px">
+              <button class="btn-primary" onclick="addDish()">+ 新增菜品</button>
+            </div>
+            <table class="data-table">
+              <thead><tr><th>ID</th><th>名称</th><th>分类</th><th>价格</th><th>库存</th><th>标签</th><th>操作</th></tr></thead>
+              <tbody id="dish-list"></tbody>
+            </table>
+          </div>
+      </div>
+
+        <!-- Orders -->
+        <div id="page-orders" class="hidden">
+          <div class="section">
+            <h3>订单列表</h3>
+            <table class="data-table">
+              <thead><tr><th>订单号</th><th>用户</th><th>金额</th><th>状态</th><th>时间</th><th>操作</th></tr></thead>
+              <tbody id="order-list"></tbody>
+            </table>
+          </div>
+      </div>
+
+        <!-- Activity -->
+        <div id="page-activity" class="hidden">
+          <div class="section">
+            <h3>公告管理</h3>
+            <div class="inline-form">
+              <input type="text" id="ann-title" placeholder="标题" style="width:200px">
+              <input type="text" id="ann-content" placeholder="内容" style="width:300px">
+              <button class="btn-primary" onclick="addAnnouncement()">+ 发布公告</button>
+            </div>
+            <table class="data-table">
+              <thead><tr><th>ID</th><th>标题</th><th>内容</th><th>状态</th></tr></thead>
+              <tbody id="ann-list"></tbody>
+            </table>
+          </div>
+          <div class="section">
+            <h3>活动管理</h3>
+            <div class="inline-form">
+              <input type="text" id="act-title" placeholder="活动标题" style="width:200px">
+              <input type="text" id="act-loc" placeholder="地点" style="width:150px">
+              <input type="number" id="act-quota" placeholder="名额" style="width:80px">
+              <button class="btn-primary" onclick="addActivity()">+ 创建活动</button>
+            </div>
+            <table class="data-table">
+              <thead><tr><th>ID</th><th>标题</th><th>地点</th><th>名额</th><th>已报名</th><th>状态</th></tr></thead>
+              <tbody id="act-list"></tbody>
+            </table>
+          </div>
+      </div>
+
+        <!-- Points -->
+        <div id="page-points" class="hidden">
+          <div class="section">
+            <h3>积分商品</h3>
+            <div class="inline-form">
+              <input type="text" id="goods-name" placeholder="商品名称" style="width:200px">
+              <input type="number" id="goods-points" placeholder="所需积分" style="width:100px">
+              <input type="number" id="goods-stock" placeholder="库存" style="width:80px">
+              <button class="btn-primary" onclick="addGoods()">+ 新增商品</button>
+            </div>
+            <table class="data-table">
+              <thead><tr><th>ID</th><th>名称</th><th>积分</th><th>库存</th><th>状态</th></tr></thead>
+              <tbody id="goods-list"></tbody>
+            </table>
+          </div>
+      </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const API_BASE = 'http://localhost:8090'
+let token = localStorage.getItem('admin_token') || ''
+
+
+async function api(method, path, body) {
+      const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': token ? 'Bearer ' + token : '' } }
+      if (body) opts.body = JSON.stringify(body)
+      const res = await fetch(API_BASE + path, opts)
+      const data = await res.json().catch(() => ({}))
+      if (data.code !== 200) throw new Error(data.message || '请求失败')
+      return data.data
+    }
+    const get = (path) => api('GET', path)
+    const post = (path, body) => api('POST', path, body)
+    const put = (path, body) => api('PUT', path, body)
+    const del = (path) => api('DELETE', path)
+
+    async function doLogin() {
+      const user = document.getElementById('login-user').value
+      const pass = document.getElementById('login-pass').value
+      try {
+        const data = await post('/admin/login', { username: user, password: pass })
+        token = data.token
+        localStorage.setItem('admin_token', token)
+        showApp()
+      } catch (e) {
+        document.getElementById('login-error').textContent = e.message
+        console.error('Login error:', e)
+      }
+    }
+    function logout() {
+      token = ''
+      localStorage.removeItem('admin_token')
+      location.reload()
+    }
+    function showApp() {
+      console.log('[DEBUG] showApp called')
+      document.getElementById('login-page').classList.add('hidden')
+      document.getElementById('app').classList.remove('hidden')
+      console.log('[DEBUG] login-page classes:', document.getElementById('login-page').className)
+      console.log('[DEBUG] app classes:', document.getElementById('app').className)
+      loadDashboard()
+    }
+    if (token) { console.log('[DEBUG] auto-login with token'); showApp() }
+
+    function switchPage(name, el) {
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'))
+      if (el) el.classList.add('active')
+      document.querySelectorAll('#content > div').forEach(p => p.classList.add('hidden'))
+      document.getElementById('page-' + name).classList.remove('hidden')
+      document.getElementById('page-title').textContent = {
+        dashboard: '数据概览', menu: '菜单管理', orders: '订单管理',
+        activity: '活动管理', points: '积分商品'
+      }[name]
+      if (name === 'dashboard') loadDashboard()
+      if (name === 'menu') loadMenu()
+      if (name === 'orders') loadOrders()
+      if (name === 'activity') loadActivity()
+      if (name === 'points') loadPoints()
+    }
+
+    async function loadDashboard() {
+      try {
+        const [dishes, activities, orders] = await Promise.all([
+        get('/api/admin/menu/dishes').catch(() => ({ total: 0 })),
+        get('/api/admin/activity/list').catch(() => []),
+        get('/api/admin/order/list').catch(() => ({ total: 0 }))
+        ])
+        document.getElementById('stat-dishes').textContent = (dishes && dishes.total) || 0
+        document.getElementById('stat-activities').textContent = (activities && activities.length) || 0
+        document.getElementById('stat-orders').textContent = (orders && orders.total) || 0
+        document.getElementById('stat-users').textContent = '1+'
+      } catch (e) { console.error('Dashboard error:', e) }
+    }
+
+    let catMap = {}
+    async function loadMenu() {
+      try {
+        const cats = await get('/api/admin/menu/categories')
+        catMap = {}
+        const catRows = (cats || []).map(c => {
+        catMap[c.id] = c.name
+        return `<tr><td>${c.id}</td><td>${c.name}</td><td>${c.sort_order}</td><td><button class="btn-danger" onclick="deleteCategory(${c.id})">删除</button></td></tr>`
+        }).join('')
+        document.getElementById('cat-list').innerHTML = catRows || '<tr><td colspan="4" style="text-align:center;color:#999">暂无数据</td></tr>'
+
+        const dishes = await get('/api/admin/menu/dishes')
+        const dishList = ((dishes && dishes.list) || []).map(d => {
+        return `<tr><td>${d.id}</td><td>${d.name}</td><td>${catMap[d.category_id] || '-'}</td><td>¥${(d.price || 0) / 100}</td><td>${d.stock === -1 ? '不限' : (d.stock ?? '-')}</td><td>${d.tags || '-'}</td><td><button class="btn-danger" onclick="deleteDish(${d.id})">删除</button></td></tr>`
+        }).join('')
+        document.getElementById('dish-list').innerHTML = dishList || '<tr><td colspan="7" style="text-align:center;color:#999">暂无数据</td></tr>'
+
+        const sel = document.getElementById('dish-cat')
+        sel.innerHTML = '<option value="">选择分类</option>' + (cats || []).map(c => `<option value="${c.id}">${c.name}</option>`).join('')
+      } catch (e) { console.error('Menu error:', e); alert('加载菜单失败: ' + e.message) }
+    }
+    async function addCategory() {
+      const name = document.getElementById('cat-name').value
+      const sort = parseInt(document.getElementById('cat-sort').value) || 0
+      if (!name) return alert('请输入分类名称')
+      try { 
+        await post('/api/admin/menu/admin/category', { name, sort_order: sort }); 
+        document.getElementById('cat-name').value = ''; 
+        document.getElementById('cat-sort').value = ''; 
+        alert('分类添加成功！');
+        loadMenu(); 
+      } catch (e) { alert(e.message) }
+    }
+    async function deleteCategory(id) {
+      if (!confirm('确定删除该分类？')) return
+      try { await del('/api/admin/menu/admin/category/' + id); loadMenu() } catch (e) { alert(e.message) }
+    }
+    async function addDish() {
+      const name = document.getElementById('dish-name').value
+      const cat = document.getElementById('dish-cat').value
+      const price = parseInt(document.getElementById('dish-price').value) || 0
+      const stock = parseInt(document.getElementById('dish-stock').value) || 0
+      const tags = document.getElementById('dish-tags').value
+      if (!name || !cat) return alert('请填写完整信息')
+      try {
+        await post('/api/admin/menu/admin/dish', { name, category_id: parseInt(cat), price, stock, tags, status: 1 })
+        document.getElementById('dish-name').value = ''
+        loadMenu()
+      } catch (e) { alert(e.message) }
+    }
+    async function deleteDish(id) {
+      if (!confirm('确定删除该菜品？')) return
+      try { await del('/api/admin/menu/admin/dish/' + id); loadMenu() } catch (e) { alert(e.message) }
+    }
+
+    async function loadOrders() {
+      try {
+        const data = await get('/api/admin/order/list')
+        const rows = ((data && data.list) || []).map(o => {
+        const statusText = { pending: '待支付', paid: '已支付', completed: '已完成', cancelled: '已取消' }
+        return `<tr><td>${o.order_no || o.id}</td><td>${o.user_id}</td><td>¥${(o.total_amount || 0) / 100}</td><td>${statusText[o.status] || o.status}</td><td>${o.created_at ? o.created_at.split('T')[0] : '-'}</td><td><button class="btn-primary" onclick="updateOrderStatus(${o.id},'completed')">完成</button></td></tr>`
+        }).join('')
+        document.getElementById('order-list').innerHTML = rows || '<tr><td colspan="6" style="text-align:center;color:#999">暂无订单</td></tr>'
+      } catch (e) { console.error('Orders error:', e) }
+    }
+    async function updateOrderStatus(id, status) {
+      try { await put('/api/admin/order/admin/status', { order_id: id, status }); loadOrders() } catch (e) { alert(e.message) }
+    }
+
+    async function loadActivity() {
+      try {
+        const anns = await get('/api/admin/activity/announcements')
+        const annRows = (anns || []).map(a => `<tr><td>${a.id}</td><td>${a.title}</td><td>${a.content}</td><td>${a.status === 1 ? '已发布' : '下架'}</td></tr>`).join('')
+        document.getElementById('ann-list').innerHTML = annRows || '<tr><td colspan="4" style="text-align:center;color:#999">暂无公告</td></tr>'
+
+        const acts = await get('/api/admin/activity/list')
+        const actRows = (acts || []).map(a => {
+          const statusText = { published: '已发布', draft: '草稿', ended: '已结束', cancelled: '已取消' };
+          return `<tr><td>${a.id}</td><td>${a.title}</td><td>${a.location || '-'}</td><td>${a.max_participants === -1 ? '不限' : (a.max_participants || 0)}</td><td>${a.current_participants || 0}</td><td>${statusText[a.status] || a.status}</td></tr>`
+        }).join('')
+        document.getElementById('act-list').innerHTML = actRows || '<tr><td colspan="6" style="text-align:center;color:#999">暂无活动</td></tr>'
+      } catch (e) { console.error('Activity error:', e) }
+    }
+    async function addAnnouncement() {
+      const title = document.getElementById('ann-title').value
+      const content = document.getElementById('ann-content').value
+      if (!title || !content) return alert('请填写完整信息')
+      try {
+        await post('/api/admin/activity/admin/announcement', { title, content, is_published: true })
+        document.getElementById('ann-title').value = ''
+        document.getElementById('ann-content').value = ''
+        loadActivity()
+      } catch (e) { alert(e.message) }
+    }
+    async function addActivity() {
+      const title = document.getElementById('act-title').value
+      const loc = document.getElementById('act-loc').value
+      const quota = parseInt(document.getElementById('act-quota').value) || 20
+      if (!title) return alert('请输入活动标题')
+      try {
+        await post('/api/admin/activity/admin/activity', { title, location: loc, quota, max_participants: quota })
+        document.getElementById('act-title').value = ''
+        loadActivity()
+      } catch (e) { alert(e.message) }
+    }
+
+    async function loadPoints() {
+      try {
+        const goods = await get('/api/admin/points/goods')
+        const rows = (goods || []).map(g => `<tr><td>${g.id}</td><td>${g.name}</td><td>${g.points_price}</td><td>${g.stock}</td><td>${g.status === 1 ? '上架' : '下架'}</td></tr>`).join('')
+        document.getElementById('goods-list').innerHTML = rows || '<tr><td colspan="5" style="text-align:center;color:#999">暂无商品</td></tr>'
+      } catch (e) { console.error('Points error:', e) }
+    }
+    async function addGoods() {
+      const name = document.getElementById('goods-name').value
+      const points = parseInt(document.getElementById('goods-points').value) || 0
+      const stock = parseInt(document.getElementById('goods-stock').value) || 0
+      if (!name) return alert('请输入商品名称')
+      try {
+        await post('/api/admin/points/admin/goods', { name, points_price: points, stock, type: 'physical', status: 1 })
+        document.getElementById('goods-name').value = ''
+        loadPoints()
+      } catch (e) { alert(e.message) }
+    }
+    </script>
+    </body>
+    </html>

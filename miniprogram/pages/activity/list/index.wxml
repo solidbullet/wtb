@@ -1,0 +1,22 @@
+<view class="container activity-page">
+  <view class="section-title"><view class="accent-bar"></view>精彩活动</view>
+  <view class="activity-list">
+    <view class="activity-card" wx:for="{{activities}}" wx:key="id">
+      <image class="act-img" src="{{item.image||defaultImage}}" mode="aspectFill" />
+      <view class="act-info">
+        <text class="act-title">{{item.title}}</text>
+        <text class="act-meta">📅 {{item.date}}  📍 {{item.location||'店内'}}</text>
+        <view class="act-progress">
+          <view class="act-progress-bar">
+            <view class="act-progress-fill" style="width: {{(item.registered/item.quota)*100}}%"></view>
+          </view>
+          <text class="act-progress-text">{{item.registered}}/{{item.quota}} 人</text>
+        </view>
+        <view class="act-bottom">
+          <text class="act-status {{item.status==='open'?'open':'closed'}}">{{item.status==='open'?'报名中':'已结束'}}</text>
+          <view class="act-btn {{item.status==='open'?'':'disabled'}}" bindtap="register" data-id="{{item.id}}">{{item.registered?item.registered>=item.quota?'已满员':'立即报名':'立即报名'}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

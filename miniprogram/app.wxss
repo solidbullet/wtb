@@ -1,0 +1,65 @@
+page {
+  background-color: #F9F6F0;
+  color: #3D3D3D;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Segoe UI', system-ui, sans-serif;
+}
+
+.container {
+  padding: 24rpx;
+}
+
+.card {
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.text-primary { color: #E88D2E; }
+.text-secondary { color: #5B8C5A; }
+.text-muted { color: #999999; }
+.text-danger { color: #E74C3C; }
+
+.bg-primary { background-color: #E88D2E; }
+.bg-secondary { background-color: #5B8C5A; }
+.bg-pink { background-color: #F2D7D5; }
+
+.btn-primary {
+  background: #E88D2E;
+  color: #fff;
+  border-radius: 44rpx;
+  padding: 20rpx 40rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  text-align: center;
+}
+
+.btn-primary:active {
+  opacity: 0.9;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+  display: flex;
+  align-items: center;
+}
+
+.accent-bar {
+  width: 6rpx;
+  height: 28rpx;
+  border-radius: 4rpx;
+  background: #E88D2E;
+  margin-right: 12rpx;
+}
+
+.scroll-x {
+  white-space: nowrap;
+}
+
+.scroll-x .inline-block {
+  display: inline-block;
+  vertical-align: top;
+}

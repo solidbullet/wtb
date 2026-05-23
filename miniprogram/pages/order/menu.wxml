@@ -1,0 +1,130 @@
+<view class="menu-page">
+  <!-- 桌号提示栏 -->
+  <view class="seat-bar" wx:if="{{seatId}}">
+    <view class="seat-info">
+      <text class="seat-icon">🪑</text>
+      <text class="seat-name">当前桌号：{{seatId}}</text>
+    </view>
+    <view class="seat-change" bindtap="reScan">换桌</view>
+  </view>
+  <view class="seat-bar empty" wx:if="{{!seatId}}">
+    <view class="seat-info">
+      <text class="seat-icon">📷</text>
+      <text class="seat-name">请先扫描桌上二维码</text>
+    </view>
+    <view class="seat-change" bindtap="scanSeat">点击扫码</view>
+  </view>
+
+  <!-- 顶部店铺信息 -->
+  <view class="shop-header">
+    <view class="shop-name">汪托帮 · 山水宠物俱乐部</view>
+    <!-- <view class="shop-meta">营业时间 10:00-22:00 · 欢迎光临</view> -->
+  </view>
+
+  <!-- 错误提示 -->
+  <view wx:if="{{errorMsg}}" style="background:#fff3f3;color:#c00;padding:20rpx 30rpx;font-size:26rpx;text-align:center;">
+    {{errorMsg}}
+  </view>
+
+  <!-- 主体：左侧分类 + 右侧菜品 -->
+  <view class="main-body" style="padding-bottom: {{cartTotal > 0 ? '120rpx' : '0'}};">
+    <!-- 左侧分类 -->
+    <scroll-view class="category-bar" scroll-y>
+      <view class="category-item {{currentCat===item.id?'active':''}}" wx:for="{{categories}}" wx:key="id" bindtap="switchCat" data-id="{{item.id}}">
+        {{item.name}}
+      </view>
+    </scroll-view>
+
+    <!-- 右侧菜品 -->
+    <scroll-view class="dish-list" scroll-y>
+      <view class="cat-title">{{currentCatName}}</view>
+      <view class="dish-item" wx:for="{{dishes}}" wx:key="id">
+        <image class="dish-img" src="{{item.image||defaultImage}}" mode="aspectFill" />
+        <view class="dish-info">
+          <text class="dish-name">{{item.name}}</text>
+          <text class="dish-desc">{{item.description||''}}</text>
+          <view class="dish-bottom">
+            <view class="price-wrap">
+              <block wx:if="{{item.member_price > 0}}">
+                <text class="dish-price member-active">¥{{item.member_price/100}}</text>
+                <text class="origin-price">¥{{item.price/100}}</text>
+              </block>
+              <block wx:else>
+                <text class="dish-price">¥{{item.price/100}}</text>
+              </block>
+            </view>
+            <view class="qty-control">
+              <view class="qty-btn minus" bindtap="minus" data-id="{{item.id}}" wx:if="{{cartMap[item.id]>0}}">-</view>
+              <text class="qty-num" wx:if="{{cartMap[item.id]>0}}">{{cartMap[item.id]}}</text>
+              <view class="qty-btn plus" bindtap="plus" data-id="{{item.id}}">+</view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="list-bottom">已经到底啦 ~</view>
+    </scroll-view>
+  </view>
+
+  <!-- 底部购物车栏 -->
+  <view class="cart-bar" wx:if="{{cartTotal > 0}}">
+    <view class="cart-left" bindtap="toggleCartPanel">
+      <view class="cart-ball has-goods">
+        <text class="ball-icon">🛒</text>
+        <text class="ball-badge">{{cartTotal}}</text>
+      </view>
+      <view class="cart-price-area">
+        <text class="cart-total">¥{{cartAmount/100}}</text>
+        <view class="cart-price-sub" wx:if="{{cartSavedAmount > 0}}">
+          <text class="cart-origin">¥{{cartOriginAmount/100}}</text>
+          <text class="cart-saved">省¥{{cartSavedAmount/100}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="cart-submit active" bindtap="goConfirm">去结算</view>
+  </view>
+
+  <!-- 购物车弹层遮罩 -->
+  <view class="panel-mask" wx:if="{{showCartPanel}}" bindtap="closeCartPanel"></view>
+
+  <!-- 购物车详情弹层 -->
+  <view class="cart-panel {{showCartPanel?'show':''}}">
+    <view class="panel-header">
+      <text class="panel-title">已选商品</text>
+      <view class="panel-clear" bindtap="clearCart">
+        <text class="clear-icon">🗑️</text>
+        <text>清空</text>
+      </view>
+    </view>
+    <scroll-view class="panel-list" scroll-y>
+      <view class="panel-item" wx:for="{{cartItems}}" wx:key="dish_id">
+        <view class="panel-item-left">
+          <text class="panel-item-name">{{item.dish_name}}</text>
+          <view class="panel-item-price-wrap">
+            <text class="panel-item-price member-active" wx:if="{{item.saved_per_unit > 0}}">¥{{item.unit_price/100}}</text>
+            <text class="panel-item-price" wx:else>¥{{item.unit_price/100}}</text>
+            <text class="panel-origin-price" wx:if="{{item.saved_per_unit > 0}}">¥{{item.origin_price/100}}</text>
+            <text class="panel-saved-tag" wx:if="{{item.saved_per_unit > 0}}">省¥{{item.saved_total/100}}</text>
+          </view>
+        </view>
+        <view class="panel-item-right">
+          <view class="panel-qty-control">
+            <view class="panel-btn minus" bindtap="panelMinus" data-id="{{item.dish_id}}">-</view>
+            <text class="panel-qty-num">{{item.quantity}}</text>
+            <view class="panel-btn plus" bindtap="panelPlus" data-id="{{item.dish_id}}">+</view>
+          </view>
+          <view class="panel-delete" bindtap="panelRemove" data-id="{{item.dish_id}}">删除</view>
+        </view>
+      </view>
+      <view class="panel-empty" wx:if="{{cartItems.length===0}}">
+        <text>购物车是空的</text>
+      </view>
+    </scroll-view>
+    <view class="panel-footer">
+      <view class="panel-total">
+        <text>合计 </text>
+        <text class="panel-total-price">¥{{cartAmount/100}}</text>
+      </view>
+      <view class="panel-submit" bindtap="goConfirm">去结算</view>
+    </view>
+  </view>
+</view>

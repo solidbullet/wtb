@@ -1,0 +1,10 @@
+{
+  "name": "proxy",
+  "version": "1.0.0",
+  "description": "转发请求到后端单体服务",
+  "main": "index.js",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "wx-server-sdk": "~3.0.0"
+  }
+}

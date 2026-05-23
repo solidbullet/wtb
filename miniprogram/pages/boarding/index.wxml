@@ -1,0 +1,78 @@
+<view class="boarding-page">
+  <!-- Hero 头图区 -->
+  <view class="hero">
+    <view class="hero-bg">
+      <view class="hero-tag">🏕️ 山水之间 · 自由寄养</view>
+      <view class="hero-title">狗狗不想关笼子</view>
+      <view class="hero-sub">白天在千平草坪奔跑 · 夜晚回温馨房间安睡</view>
+    </view>
+  </view>
+
+  <!-- vs 对比 -->
+  <view class="vs-card">
+    <view class="vs-left">
+      <text class="vs-label vs-bad">普通宠物店</text>
+      <text class="vs-item">❌ 全天关在笼子里</text>
+      <text class="vs-item">❌ 几乎没有户外活动</text>
+      <text class="vs-item">❌ 狗狗焦虑、抑郁</text>
+    </view>
+    <view class="vs-divider">VS</view>
+    <view class="vs-right">
+      <text class="vs-label vs-good">汪托帮</text>
+      <text class="vs-item">✅ 白天千平草坪自由跑</text>
+      <text class="vs-item">✅ 杨梅树下乘凉社交</text>
+      <text class="vs-item">✅ 夜晚独立房间安睡</text>
+    </view>
+  </view>
+
+  <!-- 四大场景 -->
+  <view class="section">
+    <view class="section-title">🏡 寄养环境</view>
+    <view class="scene-grid">
+      <view class="scene-card" wx:for="{{scenes}}" wx:key="title">
+        <view class="scene-icon">{{item.icon}}</view>
+        <view class="scene-name">{{item.title}}</view>
+        <view class="scene-desc">{{item.desc}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 一日流程 -->
+  <view class="section">
+    <view class="section-title">📅 狗狗的一天</view>
+    <view class="timeline">
+      <view class="timeline-item" wx:for="{{schedule}}" wx:key="time">
+        <view class="timeline-dot"></view>
+        <view class="timeline-time">{{item.time}}</view>
+        <view class="timeline-event">{{item.event}}</view>
+        <view class="timeline-detail">{{item.detail}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 价格 -->
+  <view class="section">
+    <view class="section-title">💰 服务价格</view>
+    <view class="price-card">
+      <view class="price-row">
+        <text class="price-name">宠物寄养</text>
+        <text class="price-value">¥128/天起</text>
+      </view>
+      <view class="price-row">
+        <text class="price-name">宠物日托</text>
+        <text class="price-value">¥68/天</text>
+      </view>
+      <view class="price-row highlight">
+        <text class="price-name">宠物全托（年卡）</text>
+        <text class="price-value">¥10,000/年</text>
+      </view>
+      <view class="price-tip">全托会员：全年任意时间寄养 + 全年无限次日托</view>
+    </view>
+  </view>
+
+  <!-- 底部按钮 -->
+  <view class="bottom-bar">
+    <view class="btn-call" bindtap="makeCall">📞 电话咨询</view>
+    <view class="btn-primary">立即预约</view>
+  </view>
+</view>

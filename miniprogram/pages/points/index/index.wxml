@@ -1,0 +1,21 @@
+<view class="container points-page">
+  <!-- 积分余额卡 -->
+  <view class="card points-header" style="background: linear-gradient(135deg, #5B8C5A, #3D6B3C);">
+    <text class="points-label">我的积分</text>
+    <text class="points-value">{{points}}</text>
+    <text class="points-hint">积分可兑换超值商品</text>
+  </view>
+
+  <view class="section-title"><view class="accent-bar"></view>兑换商品</view>
+  <view class="goods-list">
+    <view class="goods-card" wx:for="{{goods}}" wx:key="id">
+      <image class="goods-img" src="{{item.image||defaultImage}}" mode="aspectFill" />
+      <text class="goods-name">{{item.name}}</text>
+      <text class="goods-desc">{{item.desc||''}}</text>
+      <view class="goods-bottom">
+        <text class="goods-points">{{item.points}} 积分</text>
+        <view class="exchange-btn {{points>=item.points?'':'disabled'}}" bindtap="exchange" data-id="{{item.id}}" data-points="{{item.points}}">兑换</view>
+      </view>
+    </view>
+  </view>
+</view>

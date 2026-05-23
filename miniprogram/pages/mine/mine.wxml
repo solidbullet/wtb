@@ -1,0 +1,91 @@
+<view class="container">
+  <view class="top-bg"></view>
+  <!-- 登录错误提示 -->
+  <view class="login-error" wx:if="{{errorMsg}}">
+    <text class="error-text">{{errorMsg}}</text>
+    <view class="relogin-btn" bindtap="doRelogin">重新登录</view>
+  </view>
+
+  <view class="profile-header">
+    <!-- 右上角设置图标 -->
+    <view class="settings-btn" bindtap="showSettings">⚙️</view>
+    <view class="profile-top">
+      <view class="profile-left">
+        <!-- 微信头像：点击可选择头像 -->
+        <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+          <image class="avatar-img" src="{{avatarUrl}}" mode="aspectFill" />
+          <!-- 未设置头像时显示引导提示 -->
+          <view class="avatar-hint" wx:if="{{!user.avatar_url}}">📷</view>
+        </button>
+        <view class="profile-info">
+          <view class="profile-name">{{user.nickname || '微信用户'}}</view>
+          <view class="profile-badges">
+            <text class="badge {{memberInfo.member_level===2?'gold':(memberInfo.member_level===1?'green':'grey')}}">
+              {{memberInfo.member_level===2?'👑 充值客户':(memberInfo.member_level===1?'⭐ 会员客户':'🐾 普通客户')}}
+            </text>
+            <text class="badge member">汪托帮</text>
+          </view>
+          <view class="profile-welcome">欢迎光临 · 山水宠物俱乐部</view>
+          <!-- 升级进度 -->
+          <view class="upgrade-bar" wx:if="{{memberInfo.member_level < 2}}">
+            <view class="upgrade-track">
+              <view class="upgrade-fill" style="width: {{memberInfo.progress_percent}}%;"></view>
+            </view>
+            <view class="upgrade-text" wx:if="{{memberInfo.member_level===0}}">
+              支付 ¥199 开通会员，享受会员价折扣
+            </view>
+            <view class="upgrade-text" wx:if="{{memberInfo.member_level===1}}">
+              预充值 ¥1000 升级为充值客户，到账 ¥1200 ›
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 新用户注册提示：未绑定手机号时显示 -->
+  <view class="card register-tip" wx:if="{{!user.phone && !errorMsg}}">
+    <view class="register-content">
+      <text class="register-title">📱 完善手机号信息</text>
+      <text class="register-desc">绑定手机号后即可享受会员服务和积分兑换</text>
+      <button class="phone-btn" open-type="getPhoneNumber" bindgetphonenumber="onGetPhoneNumber">
+        一键授权手机号
+      </button>
+    </view>
+  </view>
+
+  <view class="asset-grid">
+    <view class="asset-card">
+      <text class="asset-label">我的余额</text>
+      <text class="asset-value">¥{{(user.balance||0)/100}}</text>
+    </view>
+    <view class="asset-card">
+      <text class="asset-label">我的积分</text>
+      <text class="asset-value text-secondary">{{points}}</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="group-title">我的服务</view>
+    <view class="menu-item" bindtap="goOrders">
+      <view class="menu-left"><view class="menu-icon orange">📋</view><text class="menu-text">我的订单</text></view>
+      <view class="menu-right"><text class="menu-arrow">›</text></view>
+    </view>
+    <view class="menu-item" bindtap="goPoints">
+      <view class="menu-left"><view class="menu-icon green">⭐</view><text class="menu-text">积分兑换记录</text></view>
+      <view class="menu-right"><text class="menu-arrow">›</text></view>
+    </view>
+    <view class="menu-item" bindtap="goPets">
+      <view class="menu-left"><view class="menu-icon pink">🐕</view><text class="menu-text">我的宠物</text></view>
+      <view class="menu-right"><text class="menu-arrow">›</text></view>
+    </view>
+    <view class="menu-item" bindtap="goRegistrations">
+      <view class="menu-left"><view class="menu-icon orange">📅</view><text class="menu-text">活动报名</text></view>
+      <view class="menu-right"><text class="menu-arrow">›</text></view>
+    </view>
+    <view class="menu-item" bindtap="goRecharges">
+      <view class="menu-left"><view class="menu-icon green">💳</view><text class="menu-text">充值记录</text></view>
+      <view class="menu-right"><text class="menu-arrow">›</text></view>
+    </view>
+  </view>
+</view>

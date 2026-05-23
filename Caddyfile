@@ -1,0 +1,3 @@
+wtb.lqqnw.cn {
+    reverse_proxy backend:8080
+}

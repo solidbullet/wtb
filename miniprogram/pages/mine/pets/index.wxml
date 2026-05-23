@@ -1,0 +1,14 @@
+<view class="container pets-page">
+  <view class="pet-card" wx:for="{{pets}}" wx:key="id">
+    <image class="pet-avatar" src="{{item.avatar||defaultAvatar}}" mode="aspectFill" />
+    <view class="pet-info">
+      <text class="pet-name">{{item.name}}</text>
+      <text class="pet-meta">{{item.breed}} · {{item.age}}岁 · {{item.gender==='male'?'公':'母'}}</text>
+      <text class="pet-note">{{item.note||''}}</text>
+    </view>
+  </view>
+  <view class="empty" wx:if="{{pets.length===0}}">
+    <text>还没有添加宠物哦</text>
+    <view class="add-btn" bindtap="addPet">+ 添加宠物</view>
+  </view>
+</view>

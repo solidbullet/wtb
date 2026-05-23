@@ -1,0 +1,601 @@
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>汪托帮 · 我的</title>
+<style>
+  :root {
+    --bg:        #F9F6F0;
+    --surface:   #FFFFFF;
+    --fg:        #3D3D3D;
+    --muted:     #999999;
+    --border:    #E8E4DC;
+    --accent:    #E88D2E;
+    --accent-soft: #FFF5E6;
+    --secondary: #5B8C5A;
+    --secondary-soft: #EAF5EA;
+    --danger:    #E74C3C;
+    --pet-pink:  #F2D7D5;
+
+    --font-display: 'Iowan Old Style', 'Charter', Georgia, 'Noto Serif SC', serif;
+    --font-body:    -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Segoe UI', system-ui, sans-serif;
+
+    --radius-card: 16px;
+    --radius-pill: 44px;
+    --radius-sm:   8px;
+    --page-pad:    16px;
+    --card-pad:    16px;
+    --gap:         12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: #E5E1D8;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-body);
+    color: var(--fg);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .phone {
+    width: 390px; height: 844px;
+    background: var(--bg);
+    border-radius: 48px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.18), 0 0 0 10px #1C1C1E;
+    position: relative;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+
+  .notch {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    width: 126px; height: 37px;
+    background: #000; border-radius: 20px;
+    z-index: 100;
+  }
+  .notch::after {
+    content: ''; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    width: 10px; height: 10px;
+    background: #1a1a2e; border-radius: 50%;
+    box-shadow: inset 0 0 2px rgba(255,255,255,0.15);
+  }
+
+  .status-bar {
+    height: 54px; padding: 0 28px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding-bottom: 8px;
+    font-size: 15px; font-weight: 600; letter-spacing: -0.2px;
+    color: #fff;
+    position: relative; z-index: 50;
+  }
+  .status-left { display: flex; align-items: center; gap: 4px; }
+  .status-right { display: flex; align-items: center; gap: 4px; }
+  .battery { display: flex; align-items: center; gap: 2px; }
+  .battery-body {
+    width: 25px; height: 12px; border: 1.5px solid #fff; border-radius: 3px;
+    position: relative; padding: 1.5px;
+  }
+  .battery-body::after {
+    content: ''; position: absolute; right: -3px; top: 3px;
+    width: 2px; height: 4px; background: #fff; border-radius: 0 1px 1px 0;
+  }
+  .battery-fill { width: 76%; height: 100%; background: #fff; border-radius: 1px; }
+
+  .content {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    position: relative;
+  }
+  .content::-webkit-scrollbar { display: none; }
+
+  /* Top background */
+  .top-bg {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 280px;
+    background: linear-gradient(160deg, #6B9E6A 0%, #4A7A49 50%, #3D6B3C 100%);
+    z-index: 0;
+  }
+  .top-bg::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, var(--bg));
+  }
+
+  /* User profile header */
+  .profile-header {
+    position: relative; z-index: 1;
+    padding: 8px var(--page-pad) 0;
+  }
+  .profile-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .profile-left {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    border: 2px solid rgba(255,255,255,0.4);
+  }
+  .profile-info { color: #fff; }
+  .profile-name {
+    font-family: var(--font-display);
+    font-size: 20px; font-weight: 600;
+    letter-spacing: -0.3px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .profile-badges {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 6px;
+  }
+  .badge {
+    padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .badge.gold {
+    background: linear-gradient(135deg, #F5D76E, #E8B923);
+    color: #5C4B00;
+  }
+  .badge.member {
+    background: rgba(255,255,255,0.22);
+    color: #fff;
+    backdrop-filter: blur(4px);
+  }
+  .profile-welcome {
+    font-size: 13px; color: rgba(255,255,255,0.75);
+    margin-top: 4px;
+    letter-spacing: 0.2px;
+  }
+  .profile-setting {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 18px;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .profile-setting:active { background: rgba(255,255,255,0.3); }
+
+  /* VIP Card */
+  .vip-card {
+    position: relative; z-index: 1;
+    margin: 0 var(--page-pad) var(--gap);
+    border-radius: var(--radius-card);
+    padding: 20px;
+    background: linear-gradient(135deg, #7AAF79 0%, #5B8C5A 40%, #4A7A49 100%);
+    box-shadow: 0 8px 24px rgba(91,140,90,0.28);
+    overflow: hidden;
+  }
+  .vip-card::before {
+    content: ''; position: absolute; top: -40px; right: -40px;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .vip-card::after {
+    content: ''; position: absolute; bottom: -20px; left: -20px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .vip-header {
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative; z-index: 1;
+  }
+  .vip-brand {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .vip-logo {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 14px; font-weight: 600; color: #fff;
+  }
+  .vip-title {
+    font-family: var(--font-display);
+    font-size: 18px; font-weight: 600; color: #fff;
+    letter-spacing: 0.5px;
+  }
+  .vip-qr {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.15); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 20px;
+  }
+  .vip-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 20px;
+    position: relative; z-index: 1;
+  }
+  .vip-slogan {
+    font-size: 13px; color: rgba(255,255,255,0.75);
+    letter-spacing: 1px;
+  }
+  .vip-action {
+    font-size: 13px; color: #fff; font-weight: 500;
+    display: flex; align-items: center; gap: 2px;
+    cursor: pointer;
+  }
+  .vip-action:active { opacity: 0.7; }
+
+  /* Asset cards */
+  .asset-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap);
+    padding: 0 var(--page-pad);
+    margin-bottom: var(--gap);
+  }
+  .asset-card {
+    background: var(--surface); border-radius: var(--radius-card);
+    padding: 18px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .asset-label {
+    font-size: 13px; color: var(--muted); font-weight: 500;
+  }
+  .asset-value {
+    font-family: var(--font-display);
+    font-size: 26px; font-weight: 600; color: var(--fg);
+    letter-spacing: -0.5px;
+  }
+  .asset-value.muted { color: var(--muted); }
+
+  /* Section card */
+  .section-card {
+    background: var(--surface); border-radius: var(--radius-card);
+    margin: 0 var(--page-pad) var(--gap);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    overflow: hidden;
+  }
+  .menu-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px;
+    cursor: pointer; transition: background 0.15s;
+    position: relative;
+  }
+  .menu-item:active { background: rgba(0,0,0,0.03); }
+  .menu-item:not(:last-child)::after {
+    content: ''; position: absolute; bottom: 0; left: 52px; right: 16px;
+    height: 1px; background: var(--border);
+  }
+  .menu-left {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .menu-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .menu-icon.orange { background: var(--accent-soft); }
+  .menu-icon.green  { background: var(--secondary-soft); }
+  .menu-icon.pink   { background: var(--pet-pink); }
+  .menu-icon.grey   { background: #F5F5F5; }
+  .menu-text {
+    font-size: 15px; font-weight: 500; color: var(--fg);
+  }
+  .menu-right {
+    display: flex; align-items: center; gap: 4px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .menu-arrow {
+    font-size: 18px; color: var(--muted); line-height: 1;
+  }
+
+  /* Service group title */
+  .group-title {
+    font-size: 12px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 16px 16px 4px;
+  }
+
+  /* Customer service card */
+  .cs-card {
+    background: var(--surface); border-radius: var(--radius-card);
+    margin: 0 var(--page-pad) var(--gap);
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; transition: transform 0.2s;
+  }
+  .cs-card:active { transform: scale(0.98); }
+  .cs-left {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .cs-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--secondary), #7AAF79);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 18px;
+  }
+  .cs-info {}
+  .cs-name { font-size: 15px; font-weight: 600; color: var(--fg); }
+  .cs-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .cs-btn {
+    padding: 6px 14px; border-radius: var(--radius-pill);
+    background: var(--secondary-soft); color: var(--secondary);
+    font-size: 13px; font-weight: 600;
+  }
+
+  /* Tab bar */
+  .tab-bar {
+    height: 84px; padding-bottom: 28px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-around;
+    position: relative; z-index: 50;
+  }
+  .tab-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    cursor: pointer; padding: 4px 12px;
+    transition: opacity 0.2s;
+  }
+  .tab-item:active { opacity: 0.6; }
+  .tab-icon {
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .tab-icon svg { width: 24px; height: 24px; }
+  .tab-label {
+    font-size: 10px; color: var(--muted); font-weight: 500;
+    transition: color 0.2s;
+  }
+  .tab-item.active .tab-label { color: var(--accent); font-weight: 600; }
+  .tab-item.active .tab-icon { color: var(--accent); }
+
+  .home-indicator {
+    position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    width: 134px; height: 5px; background: #000; border-radius: 3px;
+    z-index: 100;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .reveal {
+    animation: fadeUp 0.5s ease forwards;
+    opacity: 0;
+  }
+  .reveal:nth-child(1) { animation-delay: 0.05s; }
+  .reveal:nth-child(2) { animation-delay: 0.1s; }
+  .reveal:nth-child(3) { animation-delay: 0.15s; }
+  .reveal:nth-child(4) { animation-delay: 0.2s; }
+  .reveal:nth-child(5) { animation-delay: 0.25s; }
+  .reveal:nth-child(6) { animation-delay: 0.3s; }
+
+  /* Scroll padding for bottom */
+  .scroll-pad { height: 16px; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="home-indicator"></div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <div class="status-left">9:41</div>
+    <div class="status-right">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+      <div class="battery"><div class="battery-body"><div class="battery-fill"></div></div></div>
+    </div>
+  </div>
+
+  <!-- Scrollable Content -->
+  <div class="content" id="content">
+    <div class="top-bg"></div>
+
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <div class="profile-top reveal">
+        <div class="profile-left">
+          <div class="avatar">🐕</div>
+          <div class="profile-info">
+            <div class="profile-name">小明</div>
+            <div class="profile-badges">
+              <span class="badge gold">⭐ 会员客户</span>
+              <span class="badge member">汪托帮</span>
+            </div>
+            <div class="profile-welcome">欢迎光临 · 山水宠物俱乐部</div>
+          </div>
+        </div>
+        <div class="profile-setting">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </div>
+      </div>
+
+      <!-- VIP Card -->
+      <div class="vip-card reveal">
+        <div class="vip-header">
+          <div class="vip-brand">
+            <div class="vip-logo">汪</div>
+            <div class="vip-title">VIP 会员</div>
+          </div>
+          <div class="vip-qr">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </div>
+        </div>
+        <div class="vip-footer">
+          <div class="vip-slogan">山水之间 · 宠物乐园</div>
+          <div class="vip-action">
+            储值成为会员 <span style="font-size:16px;line-height:1;">›</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Asset Cards -->
+    <div class="asset-grid reveal">
+      <div class="asset-card">
+        <div class="asset-label">我的余额</div>
+        <div class="asset-value">¥500.00</div>
+      </div>
+      <div class="asset-card">
+        <div class="asset-label">我的积分</div>
+        <div class="asset-value" style="color: var(--secondary);">1,500</div>
+      </div>
+    </div>
+
+    <!-- Upgrade progress -->
+    <div class="section-card reveal" style="padding: 16px; margin-bottom: var(--gap);">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+        <span style="font-size: 13px; color: var(--muted);">再消费 ¥200 升级为充值客户</span>
+        <span style="font-size: 12px; color: var(--accent); font-weight: 600;">会员客户</span>
+      </div>
+      <div style="height: 6px; border-radius: 3px; background: var(--bg); overflow: hidden;">
+        <div style="width: 60%; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), #F5B041);"></div>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+        <span style="font-size: 11px; color: var(--muted);">¥300 / ¥500</span>
+        <span style="font-size: 11px; color: var(--muted);">👑 充值客户</span>
+      </div>
+    </div>
+
+    <!-- My Services -->
+    <div class="section-card reveal">
+      <div class="group-title">我的服务</div>
+      <div class="menu-item">
+        <div class="menu-left">
+          <div class="menu-icon orange">📋</div>
+          <div class="menu-text">我的订单</div>
+        </div>
+        <div class="menu-right">
+          <span style="font-size: 12px; color: var(--accent); background: var(--accent-soft); padding: 1px 6px; border-radius: 8px;">2 进行中</span>
+          <span class="menu-arrow">›</span>
+        </div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-left">
+          <div class="menu-icon green">⭐</div>
+          <div class="menu-text">积分兑换记录</div>
+        </div>
+        <div class="menu-right"><span class="menu-arrow">›</span></div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-left">
+          <div class="menu-icon pink">🐕</div>
+          <div class="menu-text">我的宠物</div>
+        </div>
+        <div class="menu-right">
+          <span style="font-size: 12px; color: var(--muted);">2 只</span>
+          <span class="menu-arrow">›</span>
+        </div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-left">
+          <div class="menu-icon orange">📅</div>
+          <div class="menu-text">活动报名</div>
+        </div>
+        <div class="menu-right">
+          <span style="font-size: 12px; color: var(--muted);">1 待参加</span>
+          <span class="menu-arrow">›</span>
+        </div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-left">
+          <div class="menu-icon green">💳</div>
+          <div class="menu-text">充值记录</div>
+        </div>
+        <div class="menu-right"><span class="menu-arrow">›</span></div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="section-card reveal" style="margin-top: var(--gap);">
+      <div class="group-title">设置</div>
+      <div class="menu-item">
+        <div class="menu-left">
+          <div class="menu-icon grey">📍</div>
+          <div class="menu-text">我的地址</div>
+        </div>
+        <div class="menu-right"><span class="menu-arrow">›</span></div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-left">
+          <div class="menu-icon grey">🏠</div>
+          <div class="menu-text">门店列表</div>
+        </div>
+        <div class="menu-right"><span class="menu-arrow">›</span></div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-left">
+          <div class="menu-icon grey">📝</div>
+          <div class="menu-text">完善资料</div>
+        </div>
+        <div class="menu-right"><span class="menu-arrow">›</span></div>
+      </div>
+    </div>
+
+    <!-- Customer Service -->
+    <div class="cs-card reveal" style="margin-top: var(--gap);">
+      <div class="cs-left">
+        <div class="cs-avatar">🎧</div>
+        <div class="cs-info">
+          <div class="cs-name">在线客服</div>
+          <div class="cs-desc">遇到问题？随时联系我们</div>
+        </div>
+      </div>
+      <div class="cs-btn">联系客服</div>
+    </div>
+
+    <div class="scroll-pad"></div>
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <div class="tab-item">
+      <div class="tab-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <div class="tab-label">首页</div>
+    </div>
+    <div class="tab-item">
+      <div class="tab-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3h18v18H3z"/><path d="M9 3v18"/><path d="M15 3v18"/><path d="M3 9h18"/><path d="M3 15h18"/></svg>
+      </div>
+      <div class="tab-label">点餐</div>
+    </div>
+    <div class="tab-item">
+      <div class="tab-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="8" width="18" height="4" rx="1"/><rect x="3" y="14" width="18" height="4" rx="1"/><path d="M12 2v6"/><circle cx="12" cy="4" r="2"/></svg>
+      </div>
+      <div class="tab-label">充值优惠</div>
+    </div>
+    <div class="tab-item active">
+      <div class="tab-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div class="tab-label">我的</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // Tab switching
+  document.querySelectorAll('.tab-item').forEach(tab => {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,60 @@
+<view class="container">
+  <!-- 余额卡片 -->
+  <view class="card balance-card" style="margin-bottom:24rpx;">
+    <text class="asset-label">我的余额</text>
+    <text class="asset-value">¥{{balance/100}}</text>
+    <text class="asset-sub" wx:if="{{memberLevel>=1}}">{{memberLevel===2?'👑 充值客户':'⭐ 会员客户'}}</text>
+    <text class="asset-sub" wx:else>普通客户</text>
+  </view>
+
+  <!-- 当前进度提示 -->
+  <view wx:if="{{upgradeInfo && upgradeInfo.next_plan}}" class="upgrade-tip" style="background:#FFF8F0;padding:20rpx 30rpx;border-radius:12rpx;margin-bottom:24rpx;">
+    <text style="color:#E88D2E;font-size:26rpx;">
+      您已累计充值 ¥{{upgradeInfo.total_recharged/100}}，再充值 ¥{{(upgradeInfo.next_plan.amount - upgradeInfo.total_recharged)/100}} 即可升级为 {{upgradeInfo.next_plan.name}}
+    </text>
+  </view>
+  <view wx:if="{{upgradeInfo && !upgradeInfo.next_plan}}" class="upgrade-tip" style="background:#F0FFF4;padding:20rpx 30rpx;border-radius:12rpx;margin-bottom:24rpx;">
+    <text style="color:#52C41A;font-size:26rpx;">🎉 您已达到最高档位，恭喜成为充值客户！</text>
+  </view>
+
+  <!-- 充值档位列表 -->
+  <view class="section-title"><view class="accent-bar"></view>会员服务</view>
+  <view class="recharge-grid">
+    <view
+      wx:for="{{plans}}"
+      wx:key="id"
+      class="recharge-card {{totalRecharged >= item.amount ? 'disabled' : ''}}"
+      bindtap="{{totalRecharged >= item.amount ? '' : 'doRecharge'}}"
+      data-plan-id="{{item.id}}"
+    >
+      <text class="recharge-name">{{item.name}}</text>
+      <text class="recharge-amount">¥{{item.amount/100}}</text>
+      <text class="recharge-desc">{{item.desc}}</text>
+      <text class="recharge-tip" wx:if="{{item.final_amount > 0}}">
+        到账 ¥{{item.final_amount/100}}
+      </text>
+      <text class="recharge-tip" wx:else>余额不变</text>
+
+      <!-- 按钮状态 -->
+      <view wx:if="{{totalRecharged >= item.amount}}" class="recharge-btn disabled">
+        {{totalRecharged >= item.amount ? '已完成' : ''}}
+      </view>
+      <view wx:elif="{{totalRecharged > 0 && item.amount > totalRecharged}}" class="recharge-btn upgrade">
+        补差价 ¥{{(item.amount - totalRecharged)/100}}
+      </view>
+      <view wx:else class="recharge-btn">
+        {{item.id === 1 ? '立即开通' : '立即充值'}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 充值说明 -->
+  <view style="margin-top:40rpx;padding:20rpx 30rpx;background:#F9F6F0;border-radius:12rpx;">
+    <text style="color:#999;font-size:24rpx;display:block;margin-bottom:8rpx;">💡 充值说明</text>
+    <text style="color:#999;font-size:22rpx;display:block;line-height:1.6;">
+      • 开通会员（¥199）：享受会员价折扣，余额不变
+      • 预充值（¥1000/2000/5000）：到账金额含20%赠送
+      • 支持补差价升级：已充值金额可抵扣更高档位
+    </text>
+  </view>
+</view>

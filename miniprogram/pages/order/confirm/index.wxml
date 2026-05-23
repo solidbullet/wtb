@@ -1,0 +1,57 @@
+<view class="container confirm-page">
+  <!-- 商品列表 -->
+  <view class="section-title">已选商品</view>
+  <view class="item-list">
+    <view class="item-card" wx:for="{{items}}" wx:key="dish_id">
+      <view class="item-left">
+        <text class="item-name">{{item.dish_name}}</text>
+        <view class="item-price-wrap" wx:if="{{item.saved_per_unit > 0}}">
+          <text class="item-price member-active">¥{{item.unit_price/100}}</text>
+          <text class="item-origin-price">¥{{item.origin_price/100}}</text>
+          <text class="item-saved-tag">省¥{{item.saved_total/100}}</text>
+        </view>
+        <view class="item-price-wrap" wx:else>
+          <text class="item-price">¥{{item.unit_price/100}}</text>
+        </view>
+      </view>
+      <view class="item-right">
+        <text class="item-qty">x{{item.quantity}}</text>
+        <view class="item-delete" bindtap="removeItem" data-id="{{item.dish_id}}">删除</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 备注 -->
+  <view class="remark-card">
+    <text class="remark-label">订单备注</text>
+    <input class="remark-input" placeholder="口味偏好、忌口等" value="{{remark}}" bindinput="onRemarkInput" />
+  </view>
+
+  <!-- 合计 -->
+  <view class="summary-card">
+    <view class="summary-row">
+      <text>商品原价</text>
+      <text class="summary-origin">¥{{cartOriginAmount/100}}</text>
+    </view>
+    <view class="summary-row" wx:if="{{cartSavedAmount > 0}}">
+      <text class="summary-saved-label">会员优惠</text>
+      <text class="summary-saved">-¥{{cartSavedAmount/100}}</text>
+    </view>
+    <view class="summary-row total">
+      <text>实付金额</text>
+      <text class="total-price">¥{{cartAmount/100}}</text>
+    </view>
+  </view>
+
+  <!-- 底部提交栏 -->
+  <view class="submit-bar">
+    <view class="submit-info">
+      <text class="submit-total">¥{{cartAmount/100}}</text>
+      <text class="submit-tip" wx:if="{{cartSavedAmount > 0}}">已省¥{{cartSavedAmount/100}} · 共 {{cartTotal}} 件</text>
+      <text class="submit-tip" wx:else>共 {{cartTotal}} 件</text>
+    </view>
+    <view class="submit-btn {{submitting?'disabled':''}}" bindtap="submitOrder">
+      {{submitting?'提交中...':'提交订单'}}
+    </view>
+  </view>
+</view>
