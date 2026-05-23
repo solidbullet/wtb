@@ -24,7 +24,7 @@
       wx:for="{{plans}}"
       wx:key="id"
       class="recharge-card {{totalRecharged >= item.amount ? 'disabled' : ''}}"
-      bindtap="{{totalRecharged >= item.amount ? '' : 'doRecharge'}}"
+      bindtap="doRecharge"
       data-plan-id="{{item.id}}"
     >
       <text class="recharge-name">{{item.name}}</text>
