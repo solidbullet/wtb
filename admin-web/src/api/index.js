@@ -1,15 +1,15 @@
 export const API_BASE = ''
 
 export function getToken() {
-  return localStorage.getItem('admin_token') || ''
+  return sessionStorage.getItem('admin_token') || ''
 }
 
 export function setToken(token) {
-  localStorage.setItem('admin_token', token)
+  sessionStorage.setItem('admin_token', token)
 }
 
 export function clearToken() {
-  localStorage.removeItem('admin_token')
+  sessionStorage.removeItem('admin_token')
 }
 
 export async function api(method, path, body) {
@@ -21,7 +21,7 @@ export async function api(method, path, body) {
   if (data.code !== 200) {
     if (data.code === 40101 || data.code === 40102) {
       clearToken()
-      window.location.href = '/' // redirect to login
+      window.location.href = '/'
     }
     throw new Error(data.message || '请求失败')
   }

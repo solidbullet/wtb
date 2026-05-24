@@ -7,14 +7,17 @@ import (
 	"github.com/wtb-ordering/pkg/response"
 	"github.com/wtb-ordering/services/user/model"
 	"github.com/wtb-ordering/services/user/service"
+	orderModel "github.com/wtb-ordering/services/order/model"
+	orderrepo "github.com/wtb-ordering/services/order/repository"
 )
 
 type UserHandler struct {
 	svc *service.UserService
+	orderRepo *orderrepo.OrderRepo
 }
 
-func NewUserHandler(svc *service.UserService) *UserHandler {
-	return &UserHandler{svc: svc}
+func NewUserHandler(svc *service.UserService, orderRepo *orderrepo.OrderRepo) *UserHandler {
+	return &UserHandler{svc: svc, orderRepo: orderRepo}
 }
 
 // WxLogin POST /api/user/wx-login
@@ -269,6 +272,92 @@ func (h *UserHandler) AddPet(c *gin.Context) {
 	response.Success(c, pet)
 }
 
+// UpdatePet PUT /api/user/pets/:id
+func (h *UserHandler) UpdatePet(c *gin.Context) {
+	petID, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	var req struct {
+		Name     string  `json:"name"`
+		Breed    string  `json:"breed"`
+		Gender   string  `json:"gender"`
+		Weight   float64 `json:"weight"`
+		Birthday string  `json:"birthday"`
+		PhotoURL string  `json:"photo_url"`
+		Notes    string  `json:"notes"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, 40001, "参数错误")
+		return
+	}
+	userID := c.GetString("user_id")
+	uid, _ := strconv.ParseUint(userID, 10, 64)
+
+	pet, err := h.svc.UpdatePet(uint(petID), uint(uid), req.Name, req.Breed, req.Gender, req.Weight, req.Birthday, req.PhotoURL, req.Notes)
+	if err != nil {
+		response.Error(c, 50001, err.Error())
+		return
+	}
+	response.Success(c, pet)
+}
+
+// DeletePet DELETE /api/user/pets/:id
+func (h *UserHandler) DeletePet(c *gin.Context) {
+	petID, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	userID := c.GetString("user_id")
+	uid, _ := strconv.ParseUint(userID, 10, 64)
+
+	if err := h.svc.DeletePet(uint(petID), uint(uid)); err != nil {
+		response.Error(c, 50001, err.Error())
+		return
+	}
+	response.Success(c, gin.H{"id": petID})
+}
+
+// AdminListPets GET /api/admin/pets
+func (h *UserHandler) AdminListPets(c *gin.Context) {
+	name := c.Query("name")
+	phone := c.Query("phone")
+	pets, err := h.svc.AdminListPets(name, phone)
+	if err != nil {
+		response.Error(c, 50001, err.Error())
+		return
+	}
+	response.Success(c, pets)
+}
+
+// AdminUpdatePet PUT /api/admin/pets/:id
+func (h *UserHandler) AdminUpdatePet(c *gin.Context) {
+	petID, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	var req struct {
+		Name     string  `json:"name"`
+		Breed    string  `json:"breed"`
+		Gender   string  `json:"gender"`
+		Weight   float64 `json:"weight"`
+		Birthday string  `json:"birthday"`
+		PhotoURL string  `json:"photo_url"`
+		Notes    string  `json:"notes"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, 40001, "参数错误")
+		return
+	}
+	pet, err := h.svc.AdminUpdatePet(uint(petID), req.Name, req.Breed, req.Gender, req.Weight, req.Birthday, req.PhotoURL, req.Notes)
+	if err != nil {
+		response.Error(c, 50001, err.Error())
+		return
+	}
+	response.Success(c, pet)
+}
+
+// AdminDeletePet DELETE /api/admin/pets/:id
+func (h *UserHandler) AdminDeletePet(c *gin.Context) {
+	petID, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err := h.svc.AdminDeletePet(uint(petID)); err != nil {
+		response.Error(c, 50001, err.Error())
+		return
+	}
+	response.Success(c, gin.H{"id": petID})
+}
+
 // GetMemberInfo GET /api/user/member-info
 func (h *UserHandler) GetMemberInfo(c *gin.Context) {
 	userID := c.GetString("user_id")
@@ -401,5 +490,44 @@ func (h *UserHandler) GetUserInternal(c *gin.Context) {
 		"id":           user.ID,
 		"member_level": user.MemberLevel,
 		"balance":      user.Balance,
+	})
+}
+
+// ListUsers GET /api/admin/users
+func (h *UserHandler) ListUsers(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
+	keyword := c.Query("keyword")
+
+	list, total, err := h.svc.ListUsers(keyword, page, pageSize)
+	if err != nil {
+		response.Error(c, 50001, err.Error())
+		return
+	}
+	response.SuccessPage(c, total, page, pageSize, list)
+}
+
+// GetUserDetail GET /api/admin/user/:id
+func (h *UserHandler) GetUserDetail(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	user, pets, records, err := h.svc.GetUserDetail(uint(id))
+	if err != nil {
+		response.Error(c, 50001, err.Error())
+		return
+	}
+
+	// 查询用户订单
+	var orders []orderModel.Order
+	var orderTotal int64
+	if h.orderRepo != nil {
+		orders, orderTotal, _ = h.orderRepo.ListByUser(uint(id), "", 1, 50)
+	}
+
+	response.Success(c, gin.H{
+		"user":           user,
+		"pets":           pets,
+		"orders":         orders,
+		"order_total":    orderTotal,
+		"recharge_records": records,
 	})
 }

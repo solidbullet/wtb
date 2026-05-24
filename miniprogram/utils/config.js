@@ -3,7 +3,7 @@
 // ========================================
 
 // 服务器域名（已配置 HTTPS）
-const DOMAIN = 'wtb.lqqnw.cn'
+const DOMAIN = 'wtb.anzhitek.com'
 
 // 开发工具自动用 localhost；真机（preview / 体验版 / 上线）自动用域名
 const isDevTools = wx.getSystemInfoSync().platform === 'devtools'

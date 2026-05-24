@@ -4,7 +4,7 @@ const axios = require('axios')
 cloud.init()
 
 // 线上环境指向 HTTPS 域名
-const API_BASE = 'https://wtb.lqqnw.cn'
+const API_BASE = 'https://wtb.anzhitek.com'
 
 exports.main = async (event, context) => {
   const { path, method = 'GET', data = {} } = event

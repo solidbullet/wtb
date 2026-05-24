@@ -5,6 +5,8 @@ const BREED_OPTIONS = ['柯基', '边牧', '金毛', '拉布拉多', '柴犬', '
 
 Page({
   data: {
+    isEdit: false,
+    editId: null,
     name: '',
     breed: '',
     breedIndex: -1,
@@ -14,6 +16,37 @@ Page({
     photoUrl: '',
     notes: '',
     breedOptions: BREED_OPTIONS
+  },
+
+  onLoad(options) {
+    if (options.id) {
+      this.setData({ isEdit: true, editId: parseInt(options.id) })
+      this.loadPetDetail(parseInt(options.id))
+    }
+  },
+
+  async loadPetDetail(id) {
+    try {
+      const res = await api.get('/api/user/pets')
+      const pet = (res.data || []).find(p => p.id === id)
+      if (!pet) {
+        wx.showToast({ title: '宠物信息不存在', icon: 'none' })
+        return
+      }
+      const breedIndex = BREED_OPTIONS.indexOf(pet.breed)
+      this.setData({
+        name: pet.name || '',
+        breed: pet.breed || '',
+        breedIndex: breedIndex >= 0 ? breedIndex : -1,
+        gender: pet.gender || '',
+        weight: pet.weight ? String(pet.weight) : '',
+        birthday: pet.birthday || '',
+        photoUrl: pet.photo_url || '',
+        notes: pet.notes || ''
+      })
+    } catch (e) {
+      wx.showToast({ title: '加载宠物信息失败', icon: 'none' })
+    }
   },
 
   onNameInput(e) { this.setData({ name: e.detail.value }) },
@@ -67,9 +100,9 @@ Page({
     })
   },
 
-  // 提交添加宠物
+  // 提交（添加或编辑）
   async submit() {
-    const { name, breed, gender, weight, birthday, photoUrl, notes } = this.data
+    const { isEdit, editId, name, breed, gender, weight, birthday, photoUrl, notes } = this.data
     if (!name.trim()) {
       wx.showToast({ title: '请输入宠物名字', icon: 'none' })
       return
@@ -80,7 +113,7 @@ Page({
     }
     wx.showLoading({ title: '保存中...' })
     try {
-      await api.post('/api/user/pets', {
+      const payload = {
         name: name.trim(),
         breed,
         gender,
@@ -88,13 +121,20 @@ Page({
         birthday,
         photo_url: photoUrl,
         notes
-      })
-      wx.hideLoading()
-      wx.showToast({ title: '添加成功', icon: 'success' })
+      }
+      if (isEdit) {
+        await api.put(`/api/user/pets/${editId}`, payload)
+        wx.hideLoading()
+        wx.showToast({ title: '修改成功', icon: 'success' })
+      } else {
+        await api.post('/api/user/pets', payload)
+        wx.hideLoading()
+        wx.showToast({ title: '添加成功', icon: 'success' })
+      }
       setTimeout(() => wx.navigateBack(), 1000)
     } catch (err) {
       wx.hideLoading()
-      wx.showToast({ title: err.message || '添加失败', icon: 'none' })
+      wx.showToast({ title: err.message || '保存失败', icon: 'none' })
     }
   }
 })

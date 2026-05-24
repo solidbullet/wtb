@@ -1,89 +1,51 @@
 package service
 
 import (
-	"encoding/json"
-	"fmt"
-	"sync"
+	"github.com/wtb-ordering/services/order/model"
+	"github.com/wtb-ordering/services/order/repository"
 )
 
-type CartItem struct {
-	UserID    uint   `json:"user_id"`
-	DishID    uint   `json:"dish_id"`
-	DishName  string `json:"dish_name"`
-	Quantity  int    `json:"quantity"`
-	UnitPrice int    `json:"unit_price"`
-	Remark    string `json:"remark"`
-}
-
 type CartService struct {
-	mu  sync.RWMutex
-	mem map[string]map[string]string // seatID -> dishID -> json
+	repo *repository.CartRepo
 }
 
-func NewCartService() *CartService {
-	return &CartService{mem: make(map[string]map[string]string)}
+func NewCartService(repo *repository.CartRepo) *CartService {
+	return &CartService{repo: repo}
 }
 
-func (s *CartService) Add(seatID string, item CartItem) error {
-	field := fmt.Sprintf("%d", item.DishID)
+func (s *CartService) Add(seatID string, item model.CartItem) error {
 	if item.Quantity <= 0 {
 		return s.Remove(seatID, item.DishID)
 	}
-	data, _ := json.Marshal(item)
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.mem[seatID] == nil {
-		s.mem[seatID] = make(map[string]string)
-	}
-	s.mem[seatID][field] = string(data)
-	return nil
+	return s.repo.Upsert(seatID, item)
 }
 
-func (s *CartService) List(seatID string) ([]CartItem, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	var items []CartItem
-	for _, v := range s.mem[seatID] {
-		var item CartItem
-		json.Unmarshal([]byte(v), &item)
-		items = append(items, item)
-	}
-	return items, nil
+func (s *CartService) List(seatID string) ([]model.CartItem, error) {
+	return s.repo.ListBySeat(seatID)
 }
 
 func (s *CartService) Update(seatID string, dishID uint, quantity int, remark string) error {
 	if quantity <= 0 {
 		return s.Remove(seatID, dishID)
 	}
-	field := fmt.Sprintf("%d", dishID)
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.mem[seatID] == nil {
-		return fmt.Errorf("cart not found")
+	items, err := s.repo.ListBySeat(seatID)
+	if err != nil {
+		return err
 	}
-	data := s.mem[seatID][field]
-	var item CartItem
-	json.Unmarshal([]byte(data), &item)
-	item.Quantity = quantity
-	item.Remark = remark
-	data2, _ := json.Marshal(item)
-	s.mem[seatID][field] = string(data2)
+	for _, it := range items {
+		if it.DishID == dishID {
+			it.Quantity = quantity
+			it.Remark = remark
+			return s.repo.Upsert(seatID, it)
+		}
+	}
 	return nil
 }
 
 func (s *CartService) Remove(seatID string, dishID uint) error {
-	field := fmt.Sprintf("%d", dishID)
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.mem[seatID] != nil {
-		delete(s.mem[seatID], field)
-	}
-	return nil
+	return s.repo.Remove(seatID, dishID)
 }
 
 func (s *CartService) Clear(seatID string) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	delete(s.mem, seatID)
-	return nil
+	return s.repo.Clear(seatID)
 }

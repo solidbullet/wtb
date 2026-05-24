@@ -1,6 +1,6 @@
 <view class="container add-pet-page">
   <view class="form-card">
-    <view class="form-title">🐾 宠物信息</view>
+    <view class="form-title">{{isEdit?'✏️ 修改宠物信息':'🐾 宠物信息'}}</view>
 
     <!-- 照片上传 -->
     <view class="form-item photo-item">
@@ -22,7 +22,7 @@
     <!-- 品种 -->
     <view class="form-item">
       <text class="label required">品种</text>
-      <picker mode="selector" range="{{breedOptions}}" bindchange="onBreedChange">
+      <picker mode="selector" range="{{breedOptions}}" value="{{breedIndex}}" bindchange="onBreedChange">
         <view class="picker {{breed?'':'placeholder'}}">
           {{breed||'请选择品种'}}
           <text class="arrow">›</text>
@@ -48,7 +48,7 @@
     <!-- 生日 -->
     <view class="form-item">
       <text class="label">生日</text>
-      <picker mode="date" bindchange="onBirthdayChange">
+      <picker mode="date" value="{{birthday}}" bindchange="onBirthdayChange">
         <view class="picker {{birthday?'':'placeholder'}}">
           {{birthday||'请选择生日'}}
           <text class="arrow">›</text>
@@ -66,5 +66,7 @@
     </view>
   </view>
 
-  <view class="submit-btn" bindtap="submit">保存</view>
+  <view class="submit-bar">
+    <view class="submit-btn" bindtap="submit">{{isEdit?'保存修改':'保存'}}</view>
+  </view>
 </view>

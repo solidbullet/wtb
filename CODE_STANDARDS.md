@@ -1,14 +1,14 @@
 # 汪托帮点餐系统 — 代码规范
 
-> 适用：所有 Go 微服务 | 基于 Go 1.24 + Gin + GORM (PostgreSQL)
+> 适用：backend 单体及 services/ 下各业务代码包 | 基于 Go 1.24 + Gin + GORM (PostgreSQL)
 > 目标执行者：Kimi / AI 编程助手
-> 所有微服务必须严格遵循此规范，确保代码风格一致
+> 所有业务代码包必须严格遵循此规范，确保代码风格一致
 
 ---
 
 ## 1. 项目结构规范
 
-每个微服务目录结构：
+每个业务代码包目录结构：
 
 ```
 services/{name}/
@@ -186,7 +186,7 @@ func (r *UserRepo) FindByID(id uint) (*model.User, error) {
 
 ### 3.3 Service 层
 
-业务逻辑层，调用 repository + 其他微服务：
+业务逻辑层，调用 repository + 其他业务代码包：
 
 ```go
 package service
@@ -630,7 +630,7 @@ chore: 初始化项目脚手架
 
 ## 8. 依赖清单（go.mod）
 
-每个微服务的标准依赖：
+每个业务代码包的标准依赖：
 
 ```
 require (
@@ -645,4 +645,4 @@ require (
 
 ---
 
-> 所有微服务代码必须符合此规范。发现不符合的代码块，立即修正。
+> 所有代码必须符合此规范。发现不符合的代码块，立即修正。

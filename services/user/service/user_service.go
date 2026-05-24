@@ -50,8 +50,6 @@ func (s *UserService) WxLogin(code string) (string, *model.User, error) {
 	} else {
 		session, err := s.wechatClient.Code2Session(code)
 		if err != nil {
-			// 微信配置未设置或接口调用失败，fallback：用 code 生成模拟 openid
-			// 上线前请确保配置了正确的 AppID 和 AppSecret
 			openID = "mock_openid_" + code
 		} else {
 			openID = session.OpenID
@@ -75,7 +73,6 @@ func (s *UserService) WxLogin(code string) (string, *model.User, error) {
 	return token, user, nil
 }
 
-// LoginByOpenID 云开发模式：直接传入 openid，查库不存在则自动创建用户
 func (s *UserService) LoginByOpenID(openID string) (string, *model.User, error) {
 	user, err := s.repo.FindByOpenID(openID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -122,17 +119,12 @@ func (s *UserService) GetConsumptionSummary(userID uint) (map[string]interface{}
 	return s.consumptionRepo.SummaryByUserID(userID)
 }
 
-// 会员门槛（兼容旧常量）
 const (
-	MembershipFee    = 19900  // 199元：开通会员资格，余额不变
-	PrechargeMinimum = 100000 // 1000元：预充值门槛，到账1200元（1000+200赠送）
+	MembershipFee    = 19900
+	PrechargeMinimum = 100000
 )
 
-// RechargeByPlan 按档位充值/升级
-// planID: 目标档位ID
-// 支持补差价升级：已充值金额可抵扣目标档位门槛
 func (s *UserService) RechargeByPlan(userID uint, planID int, channel string) (*model.RechargeRecord, error) {
-	// 查找目标档位
 	var targetPlan *model.RechargePlan
 	for i := range model.RechargePlans {
 		if model.RechargePlans[i].ID == planID {
@@ -144,7 +136,6 @@ func (s *UserService) RechargeByPlan(userID uint, planID int, channel string) (*
 		return nil, errors.New("无效的充值档位")
 	}
 
-	// 获取用户信息和累计充值金额
 	user, err := s.repo.FindByID(userID)
 	if err != nil {
 		return nil, fmt.Errorf("用户不存在")
@@ -154,20 +145,16 @@ func (s *UserService) RechargeByPlan(userID uint, planID int, channel string) (*
 		totalRecharged = 0
 	}
 
-	// 计算需要支付的差价
 	payAmount := targetPlan.Amount - totalRecharged
 	if payAmount <= 0 {
 		return nil, fmt.Errorf("您已累计充值 ¥%.2f，已达到或超过该档位", float64(totalRecharged)/100)
 	}
 
-	// 计算实际到账金额（目标档位到账额 - 当前余额）
 	creditAmount := targetPlan.FinalAmount - user.Balance
 	if creditAmount < 0 {
 		creditAmount = 0
 	}
 
-	// 创建充值记录（记录实际支付的差价和实际到账）
-	// ⚠️ 支付接口开发中：记录状态为 pending，等微信支付回调后再改为 success
 	record := &model.RechargeRecord{
 		UserID:       userID,
 		Amount:       payAmount,
@@ -182,37 +169,18 @@ func (s *UserService) RechargeByPlan(userID uint, planID int, channel string) (*
 		return nil, err
 	}
 
-	// TODO: 调用微信支付接口，获取支付参数返回给前端
-	// 前端支付成功后，微信支付回调更新记录状态为 success，并执行以下逻辑：
-
-	// 更新余额（到账金额）
-	// if creditAmount > 0 {
-	// 	if err := s.repo.UpdateBalance(userID, creditAmount); err != nil {
-	// 		fmt.Printf("update balance failed: %v\n", err)
-	// 	}
-	// }
-	// 更新会员等级
-	// if targetPlan.MemberLevel > user.MemberLevel {
-	// 	if err := s.repo.UpdateMemberLevel(userID, targetPlan.MemberLevel); err != nil {
-	// 		fmt.Printf("upgrade member level failed: %v\n", err)
-	// 	}
-	// }
-
 	return record, nil
 }
 
-// Recharge 兼容旧接口（按金额充值，走plan匹配逻辑）
 func (s *UserService) Recharge(userID uint, amount int, channel string) (*model.RechargeRecord, error) {
 	if amount <= 0 {
 		return nil, errors.New("充值金额无效")
 	}
-	// 尝试匹配档位
 	for _, plan := range model.RechargePlans {
 		if plan.Amount == amount {
 			return s.RechargeByPlan(userID, plan.ID, channel)
 		}
 	}
-	// 未匹配到标准档位，走旧逻辑（仅兼容1000元及以上）
 	if amount >= PrechargeMinimum {
 		gifted := int(float64(amount) * 0.2)
 		record := &model.RechargeRecord{
@@ -225,18 +193,15 @@ func (s *UserService) Recharge(userID uint, amount int, channel string) (*model.
 		if err := s.rechargeRepo.Create(record); err != nil {
 			return nil, err
 		}
-		// TODO: 微信支付回调后更新余额和会员等级
 		return record, nil
 	}
 	return nil, errors.New("不支持的充值金额，请选择标准充值档位")
 }
 
-// GetRechargePlans 获取充值档位列表
 func (s *UserService) GetRechargePlans() []model.RechargePlan {
 	return model.RechargePlans
 }
 
-// GetUpgradeInfo 获取用户当前升级信息
 func (s *UserService) GetUpgradeInfo(userID uint) (*model.UpgradeInfo, error) {
 	user, err := s.repo.FindByID(userID)
 	if err != nil {
@@ -250,7 +215,6 @@ func (s *UserService) GetUpgradeInfo(userID uint) (*model.UpgradeInfo, error) {
 		Balance:        user.Balance,
 	}
 
-	// 查找当前已达到的最高档位
 	var currentPlan *model.RechargePlan
 	for i := len(model.RechargePlans) - 1; i >= 0; i-- {
 		if totalRecharged >= model.RechargePlans[i].Amount {
@@ -260,7 +224,6 @@ func (s *UserService) GetUpgradeInfo(userID uint) (*model.UpgradeInfo, error) {
 	}
 	info.CurrentPlan = currentPlan
 
-	// 查找下一个可升级档位
 	var nextPlan *model.RechargePlan
 	for i := range model.RechargePlans {
 		if model.RechargePlans[i].Amount > totalRecharged {
@@ -273,74 +236,76 @@ func (s *UserService) GetUpgradeInfo(userID uint) (*model.UpgradeInfo, error) {
 	return info, nil
 }
 
+// DeductBalance 使用事务 + 行锁保证原子扣款
 func (s *UserService) DeductBalance(userID uint, amount int, orderNo string) (map[string]interface{}, error) {
-	user, err := s.repo.FindByID(userID)
+	var balanceBefore int
+	err := s.repo.DB().Transaction(func(tx *gorm.DB) error {
+		var user model.User
+		if err := tx.Where("id = ?", userID).Select("balance").First(&user).Error; err != nil {
+			return fmt.Errorf("用户不存在")
+		}
+		if user.Balance < amount {
+			return fmt.Errorf("余额不足")
+		}
+		balanceBefore = user.Balance
+
+		result := tx.Model(&model.User{}).
+			Where("id = ? AND balance >= ?", userID, amount).
+			UpdateColumn("balance", gorm.Expr("balance - ?", amount))
+		if result.RowsAffected == 0 {
+			return fmt.Errorf("余额不足")
+		}
+
+		log := &model.BalanceLog{
+			UserID:  userID,
+			Type:    "deduct",
+			Amount:  -amount,
+			OrderNo: orderNo,
+			Remark:  "订单扣款",
+		}
+		return tx.Create(log).Error
+	})
 	if err != nil {
-		return nil, fmt.Errorf("用户不存在")
-	}
-	if user.Balance < amount {
-		return nil, fmt.Errorf("余额不足")
-	}
-
-	if err := s.repo.UpdateBalance(userID, -amount); err != nil {
 		return nil, err
-	}
-
-	log := &model.BalanceLog{
-		UserID:  userID,
-		Type:    "deduct",
-		Amount:  -amount,
-		OrderNo: orderNo,
-		Remark:  "订单扣款",
-	}
-	if err := s.balanceRepo.Create(log); err != nil {
-		return nil, err
-	}
-
-	newUser, _ := s.repo.FindByID(userID)
-	balanceBefore := user.Balance
-	balanceAfter := 0
-	if newUser != nil {
-		balanceAfter = newUser.Balance
 	}
 
 	return map[string]interface{}{
 		"balance_before": balanceBefore,
-		"balance_after":  balanceAfter,
+		"balance_after":  balanceBefore - amount,
 	}, nil
 }
 
+// RefundBalance 使用事务保证原子退款
 func (s *UserService) RefundBalance(userID uint, amount int, orderNo, remark string) (map[string]interface{}, error) {
-	user, err := s.repo.FindByID(userID)
+	var balanceBefore int
+	err := s.repo.DB().Transaction(func(tx *gorm.DB) error {
+		var user model.User
+		if err := tx.Where("id = ?", userID).Select("balance").First(&user).Error; err != nil {
+			return fmt.Errorf("用户不存在")
+		}
+		balanceBefore = user.Balance
+
+		if err := tx.Model(&model.User{}).Where("id = ?", userID).
+			UpdateColumn("balance", gorm.Expr("balance + ?", amount)).Error; err != nil {
+			return err
+		}
+
+		log := &model.BalanceLog{
+			UserID:  userID,
+			Type:    "refund",
+			Amount:  amount,
+			OrderNo: orderNo,
+			Remark:  remark,
+		}
+		return tx.Create(log).Error
+	})
 	if err != nil {
-		return nil, fmt.Errorf("用户不存在")
-	}
-
-	if err := s.repo.UpdateBalance(userID, amount); err != nil {
 		return nil, err
-	}
-
-	log := &model.BalanceLog{
-		UserID:  userID,
-		Type:    "refund",
-		Amount:  amount,
-		OrderNo: orderNo,
-		Remark:  remark,
-	}
-	if err := s.balanceRepo.Create(log); err != nil {
-		return nil, err
-	}
-
-	balanceBefore := user.Balance
-	newUser, _ := s.repo.FindByID(userID)
-	balanceAfter := 0
-	if newUser != nil {
-		balanceAfter = newUser.Balance
 	}
 
 	return map[string]interface{}{
 		"balance_before": balanceBefore,
-		"balance_after":  balanceAfter,
+		"balance_after":  balanceBefore + amount,
 	}, nil
 }
 
@@ -368,6 +333,109 @@ func (s *UserService) AddPet(userID uint, name, breed, gender string, weight flo
 	return pet, nil
 }
 
+func (s *UserService) UpdatePet(petID, userID uint, name, breed, gender string, weight float64, birthday, photoURL, notes string) (*model.PetProfile, error) {
+	pet, err := s.petRepo.FindByID(petID)
+	if err != nil {
+		return nil, errors.New("宠物不存在")
+	}
+	if pet.UserID != userID {
+		return nil, errors.New("无权修改")
+	}
+	pet.Name = name
+	pet.Breed = breed
+	pet.Gender = gender
+	pet.Weight = weight
+	pet.Birthday = strPtr(birthday)
+	pet.PhotoURL = photoURL
+	pet.Notes = notes
+	if err := s.petRepo.Update(pet); err != nil {
+		return nil, err
+	}
+	return pet, nil
+}
+
+func (s *UserService) DeletePet(petID, userID uint) error {
+	pet, err := s.petRepo.FindByID(petID)
+	if err != nil {
+		return errors.New("宠物不存在")
+	}
+	if pet.UserID != userID {
+		return errors.New("无权删除")
+	}
+	return s.petRepo.Delete(petID)
+}
+
+// AdminListPets 批量查询用户信息，避免 N+1
+func (s *UserService) AdminListPets(name, phone string) ([]map[string]interface{}, error) {
+	pets, err := s.petRepo.ListAll(name, phone)
+	if err != nil {
+		return nil, err
+	}
+
+	userIDs := make([]uint, 0, len(pets))
+	seen := make(map[uint]bool)
+	for _, pet := range pets {
+		if !seen[pet.UserID] {
+			userIDs = append(userIDs, pet.UserID)
+			seen[pet.UserID] = true
+		}
+	}
+	users, _ := s.repo.FindByIDs(userIDs)
+	userMap := make(map[uint]model.User)
+	for _, u := range users {
+		userMap[u.ID] = u
+	}
+
+	var result []map[string]interface{}
+	for _, pet := range pets {
+		item := map[string]interface{}{
+			"id":          pet.ID,
+			"user_id":     pet.UserID,
+			"name":        pet.Name,
+			"breed":       pet.Breed,
+			"gender":      pet.Gender,
+			"weight":      pet.Weight,
+			"birthday":    nil,
+			"photo_url":   pet.PhotoURL,
+			"notes":       pet.Notes,
+			"created_at":  pet.CreatedAt,
+			"owner_phone": "",
+			"owner_name":  "",
+		}
+		if pet.Birthday != nil {
+			item["birthday"] = *pet.Birthday
+		}
+		if u, ok := userMap[pet.UserID]; ok {
+			item["owner_phone"] = u.Phone
+			item["owner_name"] = u.Nickname
+		}
+		result = append(result, item)
+	}
+	return result, nil
+}
+
+func (s *UserService) AdminUpdatePet(petID uint, name, breed, gender string, weight float64, birthday, photoURL, notes string) (*model.PetProfile, error) {
+	pet, err := s.petRepo.FindByID(petID)
+	if err != nil {
+		return nil, errors.New("宠物不存在")
+	}
+	pet.Name = name
+	pet.Breed = breed
+	pet.Gender = gender
+	pet.Weight = weight
+	pet.Birthday = strPtr(birthday)
+	pet.PhotoURL = photoURL
+	pet.Notes = notes
+	if err := s.petRepo.Update(pet); err != nil {
+		return nil, err
+	}
+	return pet, nil
+}
+
+func (s *UserService) AdminDeletePet(petID uint) error {
+	return s.petRepo.Delete(petID)
+}
+
 func strPtr(s string) *string {
 	if s == "" {
 		return nil
@@ -376,16 +444,13 @@ func strPtr(s string) *string {
 }
 
 func (s *UserService) CheckAndUpgradeMemberLevel(userID uint) error {
-	// 当前规则：仅通过充值成为会员，消费不自动升级
 	return nil
 }
 
-// GetTotalRechargedAmount 获取用户累计充值金额（已完成的充值记录）
 func (s *UserService) GetTotalRechargedAmount(userID uint) (int, error) {
 	return s.rechargeRepo.GetTotalAmountByUserID(userID)
 }
 
-// GetRechargeRecords 获取用户充值记录列表
 func (s *UserService) GetRechargeRecords(userID uint, page, pageSize int) ([]model.RechargeRecord, int64, error) {
 	return s.rechargeRepo.ListByUserID(userID, page, pageSize)
 }
@@ -403,4 +468,18 @@ func (s *UserService) GetMemberMultiplier(memberLevel int16) float64 {
 
 func (s *UserService) GetUserInternal(userID uint) (*model.User, error) {
 	return s.repo.FindByID(userID)
+}
+
+func (s *UserService) ListUsers(keyword string, page, pageSize int) ([]model.User, int64, error) {
+	return s.repo.ListAll(keyword, page, pageSize)
+}
+
+func (s *UserService) GetUserDetail(userID uint) (*model.User, []model.PetProfile, []model.RechargeRecord, error) {
+	user, err := s.repo.FindByID(userID)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	pets, _ := s.petRepo.ListByUserID(userID)
+	records, _, _ := s.rechargeRepo.ListByUserID(userID, 1, 50)
+	return user, pets, records, nil
 }

@@ -47,8 +47,12 @@ func OpenIDAuth(userRepo *repository.UserRepo) gin.HandlerFunc {
 				c.Next()
 				return
 			}
+			// Token 存在但解析失败（过期或无效）
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"code": 40102, "message": "Token 过期或无效"})
+			return
 		}
 
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"code": 401, "message": "未登录"})
+		// 两种模式都没有提供认证凭证
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"code": 40101, "message": "未登录"})
 	}
 }

@@ -5,9 +5,7 @@
 | 组件 | 地址 | 说明 |
 |------|------|------|
 | 后台管理前端 | http://localhost:3000 | 纯 HTML/JS 页面 |
-| Admin BFF | http://localhost:8090 | 管理员登录 + API 代理 |
-| Gateway | http://localhost:8080 | 小程序网关 |
-| 各微服务 | 8081-8089 | user/menu/order/activity/points 等 |
+| Backend | http://localhost:8080 | 单体后端（含管理后台 + 小程序 API） |
 
 ### 管理员账号
 - 用户名：`admin`
@@ -23,17 +21,15 @@
 
 ## 二、服务健康检查
 
-### 2.1 所有服务端口检查
+### 2.1 后端健康检查
 ```bash
-for p in 8080 8081 8082 8083 8084 8085 8086 8087 8088 8089 8090; do
-  curl -s http://localhost:$p/health
-done
+curl -s http://localhost:8080/health
 ```
-**预期结果**：所有端口返回 `{"status":"ok"}`
+**预期结果**：返回 `{"status":"ok"}`
 
-### 2.2 Admin BFF 登录测试
+### 2.2 管理员登录测试
 ```bash
-curl -X POST http://localhost:8090/admin/login \
+curl -X POST http://localhost:8080/api/admin/login \
   -H 'Content-Type: application/json' \
   -d '{"username":"admin","password":"admin123"}'
 ```
@@ -41,7 +37,7 @@ curl -X POST http://localhost:8090/admin/login \
 
 ### 2.3 CORS 跨域测试
 ```bash
-curl -X OPTIONS http://localhost:8090/admin/login \
+curl -X OPTIONS http://localhost:8080/api/admin/login \
   -H "Origin: http://localhost:3000" \
   -H "Access-Control-Request-Method: POST"
 ```

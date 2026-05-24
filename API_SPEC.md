@@ -70,7 +70,7 @@ Authorization: Bearer {JWT}
 
 ---
 
-## 1. 用户服务 (user-service) — 端口 8081
+## 1. 用户服务 (user-service)
 
 ### 1.1 微信登录
 
@@ -391,7 +391,7 @@ GET /api/user/internal/:id
 
 ---
 
-## 2. 座位服务 (seat-service) — 端口 8082
+## 2. 座位服务 (seat-service)
 
 ### 2.1 区域列表
 
@@ -594,7 +594,7 @@ GET /api/seat/internal/:id
 
 ---
 
-## 3. 菜品服务 (menu-service) — 端口 8083
+## 3. 菜品服务 (menu-service)
 
 ### 3.1 分类树
 
@@ -843,7 +843,7 @@ POST /api/menu/admin/stock
 
 ---
 
-## 4. 营销定价服务 (pricing-service) — 端口 8088
+## 4. 营销定价服务 (pricing-service)
 
 ### 4.1 计算订单价格
 
@@ -1003,7 +1003,7 @@ POST /api/pricing/admin/combo      新增套餐
 
 ---
 
-## 5. 订单服务 (order-service) — 端口 8084
+## 5. 订单服务 (order-service)
 
 ### 5.1 加入购物车
 
@@ -1359,7 +1359,7 @@ POST /api/order/admin/refund
 
 ---
 
-## 6. 支付服务 (payment-service) — 端口 8085
+## 6. 支付服务 (payment-service)
 
 ### 6.1 创建支付单
 
@@ -1577,7 +1577,7 @@ GET /api/pay/query/:outTradeNo
 
 ---
 
-## 7. 积分服务 (points-service) — 端口 8086
+## 7. 积分服务 (points-service)
 
 ### 7.1 积分余额
 
@@ -1768,7 +1768,7 @@ POST /api/points/admin/goods  新增兑换商品
 
 ---
 
-## 8. 活动服务 (activity-service) — 端口 8087
+## 8. 活动服务 (activity-service)
 
 ### 8.1 生效公告
 
@@ -1995,7 +1995,7 @@ POST /api/activity/admin/activity      新增活动
 
 ---
 
-## 9. 数据统计服务 (analytics-service) — 端口 8089
+## 9. 数据统计服务 (analytics-service)
 
 ### 9.1 仪表盘
 

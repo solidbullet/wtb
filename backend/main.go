@@ -1,8 +1,14 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"log"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
@@ -55,81 +61,74 @@ import (
 	userservice "github.com/wtb-ordering/services/user/service"
 )
 
-func main() {
-	gin.SetMode(gin.DebugMode)
+func openDB(dsn, dbname string) *gorm.DB {
+	db, err := gorm.Open(postgres.Open(dsn+" dbname="+dbname), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("%s db error: %v", dbname, err)
+	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatalf("%s sql.DB error: %v", dbname, err)
+	}
+	sqlDB.SetMaxOpenConns(5)
+	sqlDB.SetMaxIdleConns(2)
+	sqlDB.SetConnMaxLifetime(5 * time.Minute)
+	return db
+}
 
-	// ========== 数据库连接 ==========
-	// 支持环境变量配置，方便 Docker 部署
+func main() {
+	ginMode := os.Getenv("GIN_MODE")
+	if ginMode == "" {
+		ginMode = "debug"
+	}
+	gin.SetMode(ginMode)
+
 	dbDSN := os.Getenv("DB_DSN")
 	if dbDSN == "" {
-		// 本地开发默认值：通过 Unix socket 连接
 		dbDSN = "host=/tmp user=admin sslmode=disable TimeZone=Asia/Shanghai"
 	}
 	log.Printf("database DSN: %s", dbDSN)
 
-	userDB, err := gorm.Open(postgres.Open(dbDSN+" dbname=wtb_user"), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("user db error: %v", err)
-	}
-	menuDB, err := gorm.Open(postgres.Open(dbDSN+" dbname=wtb_menu"), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("menu db error: %v", err)
-	}
-	orderDB, err := gorm.Open(postgres.Open(dbDSN+" dbname=wtb_order"), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("order db error: %v", err)
-	}
-	pricingDB, err := gorm.Open(postgres.Open(dbDSN+" dbname=wtb_pricing"), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("pricing db error: %v", err)
-	}
-	activityDB, err := gorm.Open(postgres.Open(dbDSN+" dbname=wtb_activity"), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("activity db error: %v", err)
-	}
-	pointsDB, err := gorm.Open(postgres.Open(dbDSN+" dbname=wtb_points"), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("points db error: %v", err)
-	}
-	paymentDB, err := gorm.Open(postgres.Open(dbDSN+" dbname=wtb_payment"), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("payment db error: %v", err)
-	}
-	seatDB, err := gorm.Open(postgres.Open(dbDSN+" dbname=wtb_seat"), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("seat db error: %v", err)
-	}
+	userDB := openDB(dbDSN, "wtb_user")
+	menuDB := openDB(dbDSN, "wtb_menu")
+	orderDB := openDB(dbDSN, "wtb_order")
+	pricingDB := openDB(dbDSN, "wtb_pricing")
+	activityDB := openDB(dbDSN, "wtb_activity")
+	pointsDB := openDB(dbDSN, "wtb_points")
+	paymentDB := openDB(dbDSN, "wtb_payment")
+	seatDB := openDB(dbDSN, "wtb_seat")
 	log.Println("all databases connected")
 
-	// ========== 数据库迁移 ==========
-	log.Println("running database migrations...")
-	if err := usermigration.AutoMigrate(userDB); err != nil {
-		log.Fatalf("user migration error: %v", err)
+	if os.Getenv("AUTO_MIGRATE") != "false" {
+		log.Println("running database migrations...")
+		if err := usermigration.AutoMigrate(userDB); err != nil {
+			log.Fatalf("user migration error: %v", err)
+		}
+		if err := menumigration.AutoMigrate(menuDB); err != nil {
+			log.Fatalf("menu migration error: %v", err)
+		}
+		if err := ordermigration.AutoMigrate(orderDB); err != nil {
+			log.Fatalf("order migration error: %v", err)
+		}
+		if err := pricingmigration.AutoMigrate(pricingDB); err != nil {
+			log.Fatalf("pricing migration error: %v", err)
+		}
+		if err := activitymigration.AutoMigrate(activityDB); err != nil {
+			log.Fatalf("activity migration error: %v", err)
+		}
+		if err := pointsmigration.AutoMigrate(pointsDB); err != nil {
+			log.Fatalf("points migration error: %v", err)
+		}
+		if err := paymentmigration.AutoMigrate(paymentDB); err != nil {
+			log.Fatalf("payment migration error: %v", err)
+		}
+		if err := seatmigration.AutoMigrate(seatDB); err != nil {
+			log.Fatalf("seat migration error: %v", err)
+		}
+		log.Println("all migrations completed")
 	}
-	if err := menumigration.AutoMigrate(menuDB); err != nil {
-		log.Fatalf("menu migration error: %v", err)
-	}
-	if err := ordermigration.AutoMigrate(orderDB); err != nil {
-		log.Fatalf("order migration error: %v", err)
-	}
-	if err := pricingmigration.AutoMigrate(pricingDB); err != nil {
-		log.Fatalf("pricing migration error: %v", err)
-	}
-	if err := activitymigration.AutoMigrate(activityDB); err != nil {
-		log.Fatalf("activity migration error: %v", err)
-	}
-	if err := pointsmigration.AutoMigrate(pointsDB); err != nil {
-		log.Fatalf("points migration error: %v", err)
-	}
-	if err := paymentmigration.AutoMigrate(paymentDB); err != nil {
-		log.Fatalf("payment migration error: %v", err)
-	}
-	if err := seatmigration.AutoMigrate(seatDB); err != nil {
-		log.Fatalf("seat migration error: %v", err)
-	}
-	log.Println("all migrations completed")
 
-	// ========== User Service ==========
+	// User Service
 	ur := userrepo.NewUserRepo(userDB)
 	urr := userrepo.NewRechargeRepo(userDB)
 	ubr := userrepo.NewBalanceLogRepo(userDB)
@@ -140,9 +139,8 @@ func main() {
 		AppSecret: os.Getenv("WX_APPSECRET"),
 	})
 	userSvc := userservice.NewUserService(ur, urr, ubr, ucr, upr, wc, "")
-	userHandler := userhandler.NewUserHandler(userSvc)
 
-	// ========== Menu Service ==========
+	// Menu Service
 	mcr := menurepo.NewCategoryRepo(menuDB)
 	mdr := menurepo.NewDishRepo(menuDB)
 	mpr := menurepo.NewDishPriceRepo(menuDB)
@@ -150,15 +148,17 @@ func main() {
 	menuSvc := menuservice.NewMenuService(mcr, mdr, mpr, msr)
 	menuHandler := menuhandler.NewMenuHandler(menuSvc)
 
-	// ========== Order Service ==========
+	// Order Service
 	or := orderrepo.NewOrderRepo(orderDB)
 	oir := orderrepo.NewOrderItemRepo(orderDB)
 	osl := orderrepo.NewOrderStatusLogRepo(orderDB)
-	cartSvc := orderservice.NewCartService()
+	cr := orderrepo.NewCartRepo(orderDB)
+	cartSvc := orderservice.NewCartService(cr)
 	orderSvc := orderservice.NewOrderService(or, oir, osl, cartSvc)
 	orderHandler := orderhandler.NewOrderHandler(orderSvc, cartSvc)
+	userHandler := userhandler.NewUserHandler(userSvc, or)
 
-	// ========== Pricing Service ==========
+	// Pricing Service
 	prr := pricingrepo.NewPriceRuleRepo(pricingDB)
 	ppr := pricingrepo.NewPromotionRepo(pricingDB)
 	pcr := pricingrepo.NewComboRepo(pricingDB)
@@ -166,14 +166,14 @@ func main() {
 	pricingSvc := pricingservice.NewPricingService(prr, ppr, pcr, prpr)
 	pricingHandler := pricinghandler.NewPricingHandler(pricingSvc)
 
-	// ========== Activity Service ==========
+	// Activity Service
 	ar := activityrepo.NewAnnouncementRepo(activityDB)
 	acr := activityrepo.NewActivityRepo(activityDB)
 	areg := activityrepo.NewRegistrationRepo(activityDB)
 	activitySvc := activityservice.NewActivityService(ar, acr, areg)
 	activityHandler := activityhandler.NewActivityHandler(activitySvc)
 
-	// ========== Points Service ==========
+	// Points Service
 	pur := pointsrepo.NewUserPointsRepo(pointsDB)
 	plr := pointsrepo.NewPointsLogRepo(pointsDB)
 	pgr := pointsrepo.NewExchangeGoodsRepo(pointsDB)
@@ -181,7 +181,7 @@ func main() {
 	pointsSvc := pointsservice.NewPointsService(pur, plr, pgr, por)
 	pointsHandler := pointshandler.NewPointsHandler(pointsSvc)
 
-	// ========== Payment Service ==========
+	// Payment Service
 	pmor := paymentrepo.NewPaymentOrderRepo(paymentDB)
 	pmrr := paymentrepo.NewPaymentRecordRepo(paymentDB)
 	pmref := paymentrepo.NewRefundRecordRepo(paymentDB)
@@ -189,18 +189,17 @@ func main() {
 	paymentSvc := paymentservice.NewPaymentService(pmor, pmrr, pmref, pmrech)
 	paymentHandler := paymenthandler.NewPaymentHandler(paymentSvc)
 
-	// ========== Seat Service ==========
+	// Seat Service
 	sear := seatrepo.NewAreaRepo(seatDB)
 	ser := seatrepo.NewSeatRepo(seatDB)
 	ssl := seatrepo.NewSeatStatusLogRepo(seatDB)
 	seatSvc := seatservice.NewSeatService(sear, ser, ssl)
 	seatHandler := seathandler.NewSeatHandler(seatSvc)
 
-	// ========== Admin & Analytics ==========
+	// Admin & Analytics
 	adminHandler := adminhandler.NewAdminHandler()
 	analyticsHandler := analyticshandler.NewAnalyticsHandler()
 
-	// ========== 注册路由 ==========
 	handlers := &Handlers{
 		User:      userHandler,
 		Menu:      menuHandler,
@@ -214,11 +213,41 @@ func main() {
 		Analytics: analyticsHandler,
 	}
 
-	r := setupRouter(handlers, ur)
+	r := setupRouter(handlers, ur, userDB, orderDB)
 
 	addr := ":8080"
-	log.Printf("backend starting on %s", addr)
-	if err := r.Run(addr); err != nil {
-		log.Fatalf("failed to start: %v", err)
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: r,
 	}
+
+	go func() {
+		log.Printf("backend starting on %s", addr)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("failed to start: %v", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("forced shutdown: %v", err)
+	}
+
+	var sqlDBs []*sql.DB
+	dbList := []*gorm.DB{userDB, menuDB, orderDB, pricingDB, activityDB, pointsDB, paymentDB, seatDB}
+	for _, db := range dbList {
+		if sdb, err := db.DB(); err == nil {
+			sqlDBs = append(sqlDBs, sdb)
+		}
+	}
+	for _, sdb := range sqlDBs {
+		sdb.Close()
+	}
+	log.Println("server exited")
 }

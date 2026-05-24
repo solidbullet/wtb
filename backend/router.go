@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/wtb-ordering/backend/middleware"
@@ -17,14 +18,31 @@ import (
 	seathandler "github.com/wtb-ordering/services/seat/handler"
 	userhandler "github.com/wtb-ordering/services/user/handler"
 	"github.com/wtb-ordering/services/user/repository"
+	"gorm.io/gorm"
 )
 
+var allowedOrigins = map[string]bool{
+	"http://localhost:5173": true,
+	"http://localhost:3000": true,
+	"https://wtb.lqqnw.cn":  true,
+	"https://wtb.anzhitek.com": true,
+}
+
 func CORSMiddleware() gin.HandlerFunc {
+	env := os.Getenv("ENV")
+	isProd := env == "production"
+
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
-		if origin == "" {
+		if isProd {
+			if origin == "" || !allowedOrigins[origin] {
+				c.AbortWithStatus(http.StatusForbidden)
+				return
+			}
+		} else if origin == "" {
 			origin = "*"
 		}
+
 		c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
@@ -50,61 +68,58 @@ type Handlers struct {
 	Analytics *analyticshandler.AnalyticsHandler
 }
 
-func setupRouter(h *Handlers, userRepo *repository.UserRepo) *gin.Engine {
+func setupRouter(h *Handlers, userRepo *repository.UserRepo, userDB, orderDB *gorm.DB) *gin.Engine {
 	r := gin.Default()
 	r.Use(CORSMiddleware())
 
-	// 健康检查
 	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "ok"})
+		healthy := true
+		sqlDB, err := userDB.DB()
+		if err != nil || sqlDB.Ping() != nil {
+			healthy = false
+		}
+		if healthy {
+			c.JSON(200, gin.H{"status": "ok"})
+		} else {
+			c.JSON(503, gin.H{"status": "unhealthy"})
+		}
 	})
 
-	// 静态图片服务（菜品图片、头像等）
 	imagePath := os.Getenv("IMAGE_PATH")
 	if imagePath == "" {
 		imagePath = "../miniprogram/images"
 	}
 	r.Static("/images", imagePath)
 
-	// 鉴权中间件
 	auth := middleware.OpenIDAuth(userRepo)
 
 	// ========== 公开接口 ==========
 
-	// user
 	r.POST("/api/user/wx-login", h.User.WxLogin)
 
-	// menu
 	r.GET("/api/menu/categories", h.Menu.GetCategories)
 	r.GET("/api/menu/dishes", h.Menu.ListDishes)
 	r.GET("/api/menu/dish/:id", h.Menu.GetDish)
 	r.GET("/api/menu/search", h.Menu.SearchDishes)
 	r.POST("/api/menu/dishes/batch", h.Menu.BatchDishes)
 
-	// activity
 	r.GET("/api/activity/announcements", h.Activity.ListAnnouncements)
 	r.GET("/api/activity/list", h.Activity.ListActivities)
 
-	// pricing
 	r.GET("/api/pricing/recharge-plans", h.Pricing.ListRechargePlans)
 	r.GET("/api/pricing/promotions", h.Pricing.ListPromotions)
 
-	// order（购物车公开，方便测试）
 	r.POST("/api/order/cart/add", h.Order.CartAdd)
 	r.GET("/api/order/cart/list", h.Order.CartList)
 	r.PUT("/api/order/cart/update", h.Order.CartUpdate)
 	r.POST("/api/order/cart/remove", h.Order.CartRemove)
 
-	// payment callback
 	r.POST("/api/pay/callback/wx", h.Payment.WxCallback)
 
-	// admin login
 	r.POST("/admin/login", h.Admin.AdminLogin)
 
-	// seat scan (public)
 	r.GET("/api/seat/scan", h.Seat.ScanQrcode)
 
-	// seat internal
 	seatInternal := r.Group("/api/seat/internal")
 	{
 		seatInternal.GET("/:id", h.Seat.GetSeatInternal)
@@ -112,7 +127,6 @@ func setupRouter(h *Handlers, userRepo *repository.UserRepo) *gin.Engine {
 
 	// ========== 需要鉴权的接口 ==========
 
-	// user
 	userAuth := r.Group("/api/user")
 	userAuth.Use(auth)
 	{
@@ -126,11 +140,19 @@ func setupRouter(h *Handlers, userRepo *repository.UserRepo) *gin.Engine {
 		userAuth.GET("/upgrade-info", h.User.GetUpgradeInfo)
 		userAuth.GET("/pets", h.User.ListPets)
 		userAuth.POST("/pets", h.User.AddPet)
+		userAuth.PUT("/pets/:id", h.User.UpdatePet)
+		userAuth.DELETE("/pets/:id", h.User.DeletePet)
 		userAuth.POST("/bind-phone", h.User.BindPhone)
 		userAuth.POST("/avatar", h.User.UpdateAvatar)
 	}
 
-	// user internal
+	adminUser := r.Group("/api/admin/users")
+	adminUser.Use(auth)
+	{
+		adminUser.GET("", h.User.ListUsers)
+		adminUser.GET("/:id", h.User.GetUserDetail)
+	}
+
 	userInternal := r.Group("/api/user/internal")
 	{
 		userInternal.POST("/balance/deduct", h.User.DeductBalance)
@@ -138,7 +160,6 @@ func setupRouter(h *Handlers, userRepo *repository.UserRepo) *gin.Engine {
 		userInternal.GET("/:id", h.User.GetUserInternal)
 	}
 
-	// menu admin
 	menuAdmin := r.Group("/api/menu/admin")
 	menuAdmin.Use(auth)
 	{
@@ -152,7 +173,6 @@ func setupRouter(h *Handlers, userRepo *repository.UserRepo) *gin.Engine {
 		menuAdmin.POST("/upload", h.Menu.UploadImage)
 	}
 
-	// order auth
 	orderAuth := r.Group("/api/order")
 	orderAuth.Use(auth)
 	{
@@ -160,9 +180,9 @@ func setupRouter(h *Handlers, userRepo *repository.UserRepo) *gin.Engine {
 		orderAuth.GET("/:id/status", h.Order.GetOrderStatus)
 		orderAuth.GET("/list", h.Order.ListOrders)
 		orderAuth.PUT("/admin/status", h.Order.UpdateStatus)
+		orderAuth.GET("/admin/today-paid", h.Order.TodayPaidOrders)
 	}
 
-	// payment auth
 	payAuth := r.Group("/api/pay")
 	payAuth.Use(auth)
 	{
@@ -174,7 +194,6 @@ func setupRouter(h *Handlers, userRepo *repository.UserRepo) *gin.Engine {
 		payAuth.GET("/query/:outTradeNo", h.Payment.Query)
 	}
 
-	// points
 	pointsAuth := r.Group("/api/points")
 	pointsAuth.Use(auth)
 	{
@@ -193,7 +212,6 @@ func setupRouter(h *Handlers, userRepo *repository.UserRepo) *gin.Engine {
 		pointsInternal.POST("/grant", h.Points.GrantPoints)
 	}
 
-	// pricing auth
 	pricingAuth := r.Group("/api/pricing")
 	pricingAuth.Use(auth)
 	{
@@ -211,7 +229,6 @@ func setupRouter(h *Handlers, userRepo *repository.UserRepo) *gin.Engine {
 		pricingAdmin.DELETE("/recharge-plan/:id", h.Pricing.DeleteRechargePlan)
 	}
 
-	// activity auth
 	activityAuth := r.Group("/api/activity")
 	activityAuth.Use(auth)
 	{
@@ -222,7 +239,6 @@ func setupRouter(h *Handlers, userRepo *repository.UserRepo) *gin.Engine {
 		activityAuth.POST("/admin/activity", h.Activity.CreateActivity)
 	}
 
-	// seat
 	seatAuth := r.Group("/api/seat")
 	seatAuth.Use(auth)
 	{
@@ -233,7 +249,6 @@ func setupRouter(h *Handlers, userRepo *repository.UserRepo) *gin.Engine {
 		seatAuth.POST("/qrcode/batch", h.Seat.GenerateQrcodeBatch)
 	}
 
-	// analytics
 	analyticsAuth := r.Group("/api/analytics")
 	analyticsAuth.Use(auth)
 	{
@@ -247,17 +262,24 @@ func setupRouter(h *Handlers, userRepo *repository.UserRepo) *gin.Engine {
 		analyticsAuth.POST("/export", h.Analytics.Export)
 	}
 
-	// admin rewrite — 把 /api/admin/xxx 映射到 /api/xxx，统一走本地 handler
-	adminRewrite := r.Group("/api/admin")
-	adminRewrite.Use(auth)
+	petsAdmin := r.Group("/api/pets")
+	petsAdmin.Use(auth)
 	{
-		adminRewrite.Any("/*path", func(c *gin.Context) {
-			path := c.Param("path")
+		petsAdmin.GET("", h.User.AdminListPets)
+		petsAdmin.PUT("/:id", h.User.AdminUpdatePet)
+		petsAdmin.DELETE("/:id", h.User.AdminDeletePet)
+	}
+
+	r.NoRoute(func(c *gin.Context) {
+		if strings.HasPrefix(c.Request.URL.Path, "/api/admin/") {
+			path := strings.TrimPrefix(c.Request.URL.Path, "/api/admin")
 			c.Request.URL.Path = "/api" + path
 			c.Request.RequestURI = "/api" + path
 			r.HandleContext(c)
-		})
-	}
+			return
+		}
+		c.JSON(http.StatusNotFound, gin.H{"code": 404, "message": "not found"})
+	})
 
 	return r
 }

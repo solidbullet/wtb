@@ -2,7 +2,7 @@
 
 > 基于 PRD V4 Go版 | 适配本地开发环境 (macOS 26.3 ARM64, Go 1.24.1, PostgreSQL 18.3)
 > 目标执行者：Kimi / 其他 AI 编程助手
-> 每个微服务完成后 → 单元测试 → 测试报告
+> 每个业务模块完成后 → 单元测试 → 测试报告
 
 ---
 
@@ -31,7 +31,7 @@
 
 ## 执行约定
 
-1. **每个微服务是一个独立的 Go module**，放在 `services/{name}/` 下
+1. **每个业务代码包放在 services/{name}/ 下（非独立模块）**，放在 `services/{name}/` 下
 2. **每个服务完成后**，必须运行 `go test ./... -v -cover` 并生成测试报告（模板见附录A）
 3. **数据库**：每个服务使用独立数据库，命名规则 `wtb_{service}`
 4. **端口分配**：每个服务监听不同端口，避免冲突
@@ -144,7 +144,7 @@ done
 
 ## 1. 共享包层 (pkg/)
 
-> 这三个包被所有微服务依赖，必须先完成。
+> 这三个包被所有业务代码包依赖，必须先完成。
 
 ### 1.1 pkg/response — 统一响应格式
 
@@ -564,9 +564,9 @@ func (c *Client) Code2Session(code string) (*SessionResult, error) {
 
 ---
 
-## 从第 3 章开始 — 微服务开发模板
+## 从第 3 章开始 — 业务代码包开发模板
 
-每个微服务遵循统一结构：
+每个业务代码包遵循统一结构：
 
 ```
 services/{name}/
@@ -617,7 +617,7 @@ PostgreSQL 注意事项：
 
 ## 3. 用户服务 (user-service)
 
-> 端口 8081 | 数据库 wtb_user | 依赖：pkg/jwt, pkg/response, internal/wechat
+> 数据库 wtb_user | 依赖：pkg/jwt, pkg/response, internal/wechat
 
 ### 3.1 任务清单
 
@@ -764,7 +764,7 @@ type User struct {
 
 ## 4. 座位服务 (seat-service)
 
-> 端口 8082 | 数据库 wtb_seat | 依赖：pkg/response
+> 数据库 wtb_seat | 依赖：pkg/response
 
 ### 4.1 任务清单
 
@@ -835,7 +835,7 @@ CREATE INDEX idx_seat_log_seat ON seat_status_logs(seat_id);
 
 ## 5. 菜品服务 (menu-service)
 
-> 端口 8083 | 数据库 wtb_menu | 依赖：pkg/response
+> 数据库 wtb_menu | 依赖：pkg/response
 
 ### 5.1 任务清单
 
@@ -927,7 +927,7 @@ CREATE TABLE dish_stocks (
 
 ## 6. 营销定价服务 (pricing-service)
 
-> 端口 8088 | 数据库 wtb_pricing | 依赖：pkg/response, pkg/httpclient（调用 menu-service）
+> 数据库 wtb_pricing | 依赖：pkg/response, pkg/httpclient（调用 menu-service）
 
 ### 6.1 任务清单
 
@@ -1015,7 +1015,7 @@ CREATE TABLE combos (
 
 ## 7. 订单服务 (order-service)
 
-> 端口 8084 | 数据库 wtb_order | Redis 购物车
+> 数据库 wtb_order | Redis 购物车
 > 依赖：pkg/response, pkg/httpclient（调用 user/seat/menu/pricing/payment）
 
 ### 7.1 任务清单
@@ -1121,7 +1121,7 @@ CreateOrder(seatID, userID) → Order:
 
 ## 8. 支付服务 (payment-service)
 
-> 端口 8085 | 数据库 wtb_payment | Redis 防重
+> 数据库 wtb_payment | Redis 防重
 > 依赖：pkg/response, pkg/httpclient, internal/wechat
 
 ### 8.1 任务清单
@@ -1211,7 +1211,7 @@ CREATE INDEX idx_recharge_orders_user ON recharge_orders(user_id);
 
 ## 9. 积分服务 (points-service)
 
-> 端口 8086 | 数据库 wtb_points | Redis 积分排名缓存
+> 数据库 wtb_points | Redis 积分排名缓存
 > 依赖：pkg/response, pkg/httpclient
 
 ### 9.1 任务清单
@@ -1313,7 +1313,7 @@ CREATE INDEX idx_exchange_orders_user ON exchange_orders(user_id);
 
 ## 10. 活动服务 (activity-service)
 
-> 端口 8087 | 数据库 wtb_activity
+> 数据库 wtb_activity
 > 依赖：pkg/response, internal/wechat（订阅消息）
 
 ### 10.1 任务清单
@@ -1397,7 +1397,7 @@ CREATE TABLE activity_registrations (
 
 ## 11. 数据统计服务 (analytics-service)
 
-> 端口 8089 | 数据库 wtb_analytics（存汇总数据）+ 跨库查询
+> 数据库 wtb_analytics（存汇总数据）+ 跨库查询
 > 依赖：pkg/response
 
 ### 11.1 任务清单
@@ -1436,7 +1436,7 @@ CREATE TABLE activity_registrations (
 
 ---
 
-## 12. 后台聚合服务 (admin-bff)
+## 12. 后台管理模块 (admin)
 
 > 端口 8090 | 无数据库（聚合层）
 > 依赖：pkg/response, pkg/jwt, pkg/httpclient（调用所有下游服务）
@@ -1457,7 +1457,7 @@ CREATE TABLE activity_registrations (
 
 - 接收后台管理前端的请求
 - 校验管理员权限（JWT 中包含 role）
-- 转发到对应的下游微服务
+- 转发到对应的业务 handler
 - 提供聚合接口（一次请求查多个服务）
 
 ### 12.3 测试要求
@@ -1468,14 +1468,14 @@ CREATE TABLE activity_registrations (
 
 ---
 
-## 13. API 网关 (gateway)
+## 13. API 路由 (已合并到 backend)
 
-> 端口 8080 | 无数据库
+> 无数据库
 > 依赖：pkg/jwt（验证）
 
 ### 13.1 功能
 
-- 路由分发（根据路径前缀转发到对应微服务）
+- 路由分发（根据路径前缀路由到对应 handler）
 - JWT 鉴权（公开接口白名单：/api/user/wx-login, /api/pay/callback/wx）
 - 限流（令牌桶，每秒 200 请求）
 - TraceID 注入
@@ -1641,17 +1641,17 @@ test-all:
 Phase 0:  环境准备 (0.1 → 0.5)
 Phase 1:  共享包 (pkg/jwt → pkg/response → pkg/httpclient)
 Phase 2:  internal/wechat
-Phase 3:  user-service      (端口 8081)
-Phase 4:  seat-service      (端口 8082)
-Phase 5:  menu-service      (端口 8083)
-Phase 6:  pricing-service   (端口 8088) — 依赖 menu
-Phase 7:  order-service     (端口 8084) — 依赖 user/seat/menu/pricing
-Phase 8:  payment-service   (端口 8085) — 依赖 user/order
-Phase 9:  points-service    (端口 8086) — 依赖 user
-Phase 10: activity-service  (端口 8087)
-Phase 11: analytics-service (端口 8089)
+Phase 3:  user-service     
+Phase 4:  seat-service     
+Phase 5:  menu-service     
+Phase 6:  pricing-service   — 依赖 menu
+Phase 7:  order-service     — 依赖 user/seat/menu/pricing
+Phase 8:  payment-service   — 依赖 user/order
+Phase 9:  points-service    — 依赖 user
+Phase 10: activity-service 
+Phase 11: analytics-service
 Phase 12: admin-bff         (端口 8090)
-Phase 13: gateway           (端口 8080)
+Phase 13: gateway          
 Phase 14: 前端应用
 ```
 
@@ -1675,7 +1675,7 @@ gateway ────────────────────────
 
 ## 附录A：测试报告模板
 
-每个微服务完成后，在服务目录下创建 `TEST_REPORT.md`：
+每个业务模块完成后，在服务目录下创建 `TEST_REPORT.md`：
 
 ```markdown
 # {服务名称} 测试报告
@@ -1740,23 +1740,15 @@ redis-cli ping                           # PONG
 # === Phase 1: 共享包 ===
 cd pkg/jwt        && go test -v -cover ./...
 cd pkg/response   && go test -v -cover ./...
-cd pkg/httpclient && go test -v -cover ./...
 
-# === Phase 3-12: 微服务（以 user 为例） ===
-cd services/user
-go mod tidy
-go build ./...                           # 编译
-go test ./... -v -cover                  # 测试
-go run main.go &                         # 启动
-curl http://localhost:8081/api/user/profile -H "Authorization: Bearer <token>"
-
-# === Phase 13: 网关 ===
-cd gateway
-go run main.go &
+# === Phase 3-12: 业务代码包（以 user 为例） ===
+cd backend
+go test ./... -v -cover                  # 测试所有代码包
+go run main.go &                         # 启动单体后端
 curl http://localhost:8080/api/user/profile -H "Authorization: Bearer <token>"
 ```
 
 ---
 
-> 本计划按依赖顺序排列，每完成一个微服务并进行测试后，再进行下一个。
+> 本计划按依赖顺序排列，每完成一个业务代码包并进行测试后，再进行下一个。
 > 每个阶段完成后执行 `git add -A && git commit -m "feat({service}): 完成{服务名}开发 + 测试"`。

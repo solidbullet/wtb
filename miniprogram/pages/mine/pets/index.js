@@ -41,8 +41,37 @@ Page({
     wx.showModal({
       title: pet.name,
       content: lines.join('\n'),
-      showCancel: false,
-      confirmText: '知道了'
+      confirmText: '编辑',
+      cancelText: '删除',
+      success: (res) => {
+        if (res.confirm) {
+          wx.navigateTo({ url: `/pages/mine/pets/add?id=${pet.id}` })
+        } else if (res.cancel) {
+          this.confirmDelete(pet)
+        }
+      }
+    })
+  },
+  confirmDelete(pet) {
+    wx.showModal({
+      title: '确认删除',
+      content: `确定要删除宠物「${pet.name}」吗？删除后无法恢复。`,
+      confirmText: '删除',
+      confirmColor: '#ff4d4f',
+      success: async (res) => {
+        if (res.confirm) {
+          wx.showLoading({ title: '删除中...' })
+          try {
+            await api.del(`/api/user/pets/${pet.id}`)
+            wx.hideLoading()
+            wx.showToast({ title: '删除成功', icon: 'success' })
+            this.loadPets()
+          } catch (err) {
+            wx.hideLoading()
+            wx.showToast({ title: err.message || '删除失败', icon: 'none' })
+          }
+        }
+      }
     })
   }
 })

@@ -1,7 +1,7 @@
 .add-pet-page {
   min-height: 100vh;
   background: #f5f5f5;
-  padding-bottom: 60rpx;
+  padding-bottom: 140rpx;
 }
 
 .form-card {
@@ -157,9 +157,20 @@
   margin-top: 8rpx;
 }
 
-/* 提交按钮 */
+/* 底部固定提交按钮 */
+.submit-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16rpx 20rpx;
+  padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
+  background: #fff;
+  box-shadow: 0 -2rpx 12rpx rgba(0,0,0,0.06);
+  z-index: 100;
+}
+
 .submit-btn {
-  margin: 40rpx 20rpx;
   height: 88rpx;
   background: #E88D2E;
   border-radius: 44rpx;

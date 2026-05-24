@@ -5,9 +5,12 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import MenuManagement from './pages/MenuManagement'
 import OrderManagement from './pages/OrderManagement'
+import OrderAlert from './pages/OrderAlert'
 import ActivityManagement from './pages/ActivityManagement'
 import PointsManagement from './pages/PointsManagement'
 import RechargePlanManagement from './pages/RechargePlanManagement'
+import PetManagement from './pages/PetManagement'
+import UserManagement from './pages/UserManagement'
 
 export default function App() {
   return (
@@ -18,9 +21,12 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/menu" element={<MenuManagement />} />
           <Route path="/orders" element={<OrderManagement />} />
+          <Route path="/order-alert" element={<OrderAlert />} />
+          <Route path="/users" element={<UserManagement />} />
           <Route path="/activity" element={<ActivityManagement />} />
           <Route path="/points" element={<PointsManagement />} />
           <Route path="/recharge" element={<RechargePlanManagement />} />
+          <Route path="/pets" element={<PetManagement />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
