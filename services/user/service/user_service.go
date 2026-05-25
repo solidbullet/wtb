@@ -419,7 +419,14 @@ func (s *UserService) AdminListPets(name, phone string) ([]map[string]interface{
 			"owner_name":  "",
 		}
 		if pet.Birthday != nil {
-			item["birthday"] = *pet.Birthday
+			birthdayStr := *pet.Birthday
+			for _, layout := range []string{time.RFC3339, time.RFC3339Nano, "2006-01-02T15:04:05Z", "2006-01-02"} {
+				if t, parseErr := time.Parse(layout, birthdayStr); parseErr == nil {
+					birthdayStr = t.Format("2006-01-02")
+					break
+				}
+			}
+			item["birthday"] = birthdayStr
 		}
 		if u, ok := userMap[pet.UserID]; ok {
 			item["owner_phone"] = u.Phone

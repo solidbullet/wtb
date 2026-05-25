@@ -1,9 +1,6 @@
 package handler
 
 import (
-	"bytes"
-	"fmt"
-	"io"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -258,17 +255,10 @@ func (h *UserHandler) AddPet(c *gin.Context) {
 		PhotoURL string  `json:"photo_url"`
 		Notes    string  `json:"notes"`
 	}
-
-	// 调试：打印原始请求体
-	body, _ := io.ReadAll(c.Request.Body)
-	c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
-	fmt.Println("[AddPet] raw body:", string(body))
-
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, 40001, "参数错误")
 		return
 	}
-	fmt.Println("[AddPet] parsed PhotoURL:", req.PhotoURL)
 
 	userID := c.GetString("user_id")
 	id, _ := strconv.ParseUint(userID, 10, 64)
