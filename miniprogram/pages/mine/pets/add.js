@@ -19,9 +19,14 @@ Page({
   },
 
   onLoad(options) {
+    const tempPhoto = wx.getStorageSync('temp_pet_photo_url') || ''
     if (options.id) {
       this.setData({ isEdit: true, editId: parseInt(options.id) })
       this.loadPetDetail(parseInt(options.id))
+    }
+    // 恢复可能因开发者工具自动编译而丢失的上传图片（添加/编辑都生效）
+    if (tempPhoto) {
+      this.setData({ photoUrl: tempPhoto })
     }
   },
 
@@ -34,6 +39,7 @@ Page({
         return
       }
       const breedIndex = BREED_OPTIONS.indexOf(pet.breed)
+      const tempPhoto = wx.getStorageSync('temp_pet_photo_url') || ''
       this.setData({
         name: pet.name || '',
         breed: pet.breed || '',
@@ -41,7 +47,8 @@ Page({
         gender: pet.gender || '',
         weight: pet.weight ? String(pet.weight) : '',
         birthday: pet.birthday || '',
-        photoUrl: pet.photo_url || '',
+        // 优先显示未保存的临时上传图片，其次显示数据库里的
+        photoUrl: tempPhoto || pet.photo_url || '',
         notes: pet.notes || ''
       })
     } catch (e) {
@@ -71,21 +78,32 @@ Page({
       const file = res.tempFiles[0]
       wx.showLoading({ title: '上传中...' })
       const token = wx.getStorageSync('token') || ''
+      const openid = wx.getStorageSync('openid') || ''
+      console.log('[choosePhoto] start upload, file:', file.tempFilePath)
       const uploadRes = await this.uploadFilePromise({
         url: `${API_BASE}/api/menu/admin/upload`,
         filePath: file.tempFilePath,
         name: 'file',
-        header: { Authorization: token ? 'Bearer ' + token : '' }
+        header: {
+          Authorization: token ? 'Bearer ' + token : '',
+          'X-OpenID': openid
+        }
       })
       wx.hideLoading()
+      console.log('[choosePhoto] upload response raw:', uploadRes.data)
       const data = JSON.parse(uploadRes.data)
+      console.log('[choosePhoto] upload response parsed:', data)
       if (data.code === 200) {
+        console.log('[choosePhoto] upload success, url:', data.data.url)
         this.setData({ photoUrl: data.data.url })
+        wx.setStorageSync('temp_pet_photo_url', data.data.url)
       } else {
+        console.error('[choosePhoto] upload failed, code:', data.code, 'msg:', data.message)
         wx.showToast({ title: data.message || '上传失败', icon: 'none' })
       }
     } catch (err) {
       wx.hideLoading()
+      console.error('[choosePhoto] upload error:', err)
       wx.showToast({ title: err.message || '上传失败', icon: 'none' })
     }
   },
@@ -122,6 +140,8 @@ Page({
         photo_url: photoUrl,
         notes
       }
+      console.log('[submit] payload:', JSON.stringify(payload))
+      console.log('[submit] photoUrl from data:', this.data.photoUrl)
       if (isEdit) {
         await api.put(`/api/user/pets/${editId}`, payload)
         wx.hideLoading()
@@ -131,6 +151,7 @@ Page({
         wx.hideLoading()
         wx.showToast({ title: '添加成功', icon: 'success' })
       }
+      wx.removeStorageSync('temp_pet_photo_url')
       setTimeout(() => wx.navigateBack(), 1000)
     } catch (err) {
       wx.hideLoading()

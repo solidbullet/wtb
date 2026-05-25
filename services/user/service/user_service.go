@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"gorm.io/gorm"
 	"github.com/wtb-ordering/pkg/jwt"
@@ -310,7 +311,22 @@ func (s *UserService) RefundBalance(userID uint, amount int, orderNo, remark str
 }
 
 func (s *UserService) ListPets(userID uint) ([]model.PetProfile, error) {
-	return s.petRepo.ListByUserID(userID)
+	pets, err := s.petRepo.ListByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	for i := range pets {
+		if pets[i].Birthday != nil {
+			for _, layout := range []string{time.RFC3339, time.RFC3339Nano, "2006-01-02T15:04:05Z", "2006-01-02"} {
+				if t, parseErr := time.Parse(layout, *pets[i].Birthday); parseErr == nil {
+					formatted := t.Format("2006-01-02")
+					pets[i].Birthday = &formatted
+					break
+				}
+			}
+		}
+	}
+	return pets, nil
 }
 
 func (s *UserService) AddPet(userID uint, name, breed, gender string, weight float64, birthday, photoURL, notes string) (*model.PetProfile, error) {
