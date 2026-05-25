@@ -38,3 +38,6 @@ Thumbs.db
 
 # Admin web build
 dist/
+
+# Runtime uploaded images
+miniprogram/images/dish_*.png
