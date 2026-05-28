@@ -1,5 +1,11 @@
 # WTB 项目部署指南（生产版）
 
+> ⚠️ **文档已整理**：本项目支持多环境部署，配置文件已按目标服务器分类存放：
+> - `deploy/hooper/` —— 生产环境（hooper@10.144.144.1，nginx + Docker）
+> - `deploy/qs-admin/` —— 内网环境（qs_admin@192.168.0.156，内网穿透，无外网）
+>
+> 本文档继续保留作为总览参考，具体部署脚本和配置文件请进入对应目录查看。
+
 > **目标**：读完本文档后，部署一次成功，不出现图片 404、容器冲突、配置错误等低级问题。  
 > **哲学**：把事后踩坑变成事前检查，不通过的检查项阻塞部署流程。
 
@@ -44,7 +50,7 @@ alias 直接读取        proxy_pass → 后端容器
 ### 2.1 服务器环境准备
 
 ```bash
-ssh hooper@118.145.193.23
+见/Users/admin/workspace/jyq/document/account.md
 
 # 检查 Docker
 docker --version        # 期望 20.10+
@@ -124,6 +130,7 @@ services:
     container_name: wtb-backend
     environment:
       DB_DSN: "host=postgres user=admin password=JyRUj7wlNjU0uVHh port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+      IMAGE_PATH: "/miniprogram/images"
       WX_APPID: "wx1e4315d1974c72f6"
       WX_APPSECRET: ""
     ports:
@@ -272,11 +279,83 @@ docker compose up -d
 sudo nginx -t && sudo nginx -s reload
 ```
 
+> ⚠️ **重要**：`docker compose build backend` 在服务器上执行 `go build` 会重新下载所有 Go 依赖，**首次部署可能需要 10-30 分钟**。日常代码小改动请使用下方「超快速部署」方案，10 秒内完成。
+
 ---
 
-## 三、日常更新部署（已有环境）
+## 三、日常更新部署（代码小改动）
 
-### 3.1 更新前强制检查脚本
+> **核心原则**：服务器上没有 Go 模块缓存，`docker build` 每次都会重新下载依赖，非常慢。  
+> **正确做法**：本地编译 → 只传二进制 → 替换容器内文件 → 重启。**全程 10-20 秒。**
+
+### 3.1 超快速部署脚本（推荐）
+
+```bash
+#!/bin/bash
+set -e
+
+echo "========================================"
+echo "  WTB 超快速部署（本地编译 + 热更新）"
+echo "========================================"
+
+# 1. 本地交叉编译（利用本机 Go 缓存，秒级完成）
+echo "🔨 本地编译..."
+cd backend
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o backend-linux .
+cd ..
+
+# 2. 只传变更的二进制（rsync 增量，通常 1-3 秒）
+echo "📤 上传二进制..."
+rsync -avz backend/backend-linux hooper@10.144.144.1:~/wtb/backend/
+
+# 3. 服务器上替换并重启（5 秒内完成）
+echo "🔄 热更新容器..."
+ssh hooper@10.144.144.1 "
+  docker cp ~/wtb/backend/backend-linux wtb-backend:/app/backend
+  docker restart wtb-backend
+  sleep 2
+  echo '容器状态:'
+  docker ps | grep wtb-backend
+"
+
+# 4. 验证
+echo "🧪 验证..."
+curl -s -o /dev/null -w "  wtb API: %{http_code}\n" https://wtb.lqqnw.cn/api/menu/categories
+curl -s -o /dev/null -w "  wtb 图片: %{http_code}\n" https://wtb.lqqnw.cn/images/hongshao.png
+curl -s -o /dev/null -w "  wtbadm 图片: %{http_code}\n" https://wtbadm.lqqnw.cn/images/hongshao.png
+
+echo ""
+echo "========================================"
+echo "  ✅ 部署完成"
+echo "========================================"
+```
+
+**适用场景**：
+- ✅ 后端 Go 代码有改动（API、业务逻辑等）
+- ✅ 只改动了一两个文件
+- ✅ 需要秒级上线
+
+**不适用场景**：
+- ❌ Dockerfile 本身有改动（需要 `docker compose build`）
+- ❌ 新增/修改了静态资源且 Dockerfile 的 `COPY` 层需要更新
+- ❌ 依赖了 `miniprogram/images` 目录的新增图片（需要重新 build 镜像）
+
+### 3.2 什么时候必须重新 build 镜像
+
+以下情况必须走 `docker compose build backend`：
+
+1. 修改了 `Dockerfile`
+2. 在 `miniprogram/images/` 新增了图片且 Dockerfile 中 `COPY miniprogram/images /app/images` 需要同步
+3. 首次部署（服务器上没有镜像缓存）
+4. 需要清理 Docker 缓存层
+
+```bash
+cd /home/hooper/wtb
+docker compose build backend
+docker compose up -d
+```
+
+### 3.3 更新前强制检查脚本
 
 **在服务器上运行此脚本，全部 PASS 才能继续部署：**
 
@@ -351,14 +430,16 @@ chmod +x /home/hooper/wtb/pre-deploy-check.sh
 /home/hooper/wtb/pre-deploy-check.sh
 ```
 
-### 3.2 快速部署脚本
+### 3.4 完整重建部署脚本（首次/镜像更新）
+
+以下脚本适合首次部署或必须重新 build 镜像的场景。注意：服务器上 `go build` 下载依赖很慢（10-30 分钟），日常小改动请用上方「超快速部署」。
 
 ```bash
 #!/bin/bash
 set -e
 
 echo "========================================"
-echo "  WTB 快速部署脚本"
+echo "  WTB 完整重建部署脚本"
 echo "========================================"
 
 cd /home/hooper/wtb
@@ -375,7 +456,7 @@ docker compose down 2>/dev/null || true
 
 # 3. 构建（不用 --no-cache）
 echo ""
-echo "🔨 构建后端镜像..."
+echo "🔨 构建后端镜像（服务器下载依赖，可能需要 10-30 分钟）..."
 docker compose build backend
 
 # 4. 启动
@@ -403,7 +484,28 @@ echo "========================================"
 
 ---
 
-## 四、更新 admin-web 前端
+---
+
+## 四、小程序包大小检查
+
+上传小程序前务必检查包大小，防止动态图片混入本地包：
+
+```bash
+# 检查总大小
+du -sh miniprogram/
+
+# 检查是否有异常大图（超过 500KB 的文件）
+find miniprogram/ -type f -size +500k
+
+# 动态上传的图片（dish_*.png）绝不应出现在 miniprogram/images/
+ls miniprogram/images/dish_*.png 2>/dev/null && echo "❌ 发现动态图片，需删除" || echo "✅ 无动态图片"
+```
+
+**根因**：后端 `UploadImage` 接口默认保存路径为 `uploads/`（已修复），旧代码为 `../miniprogram/images`，导致本地开发时上传的图片直接写入小程序目录。
+
+---
+
+## 五、更新 admin-web 前端
 
 admin-web 更新后需要重新构建并上传到服务器：
 
@@ -420,7 +522,7 @@ rsync -avz --delete -e "ssh" dist/ hooper@10.144.144.1:/var/www/wtbadm/
 
 ---
 
-## 五、回滚操作
+## 六、回滚操作
 
 ```bash
 cd /home/hooper/wtb
@@ -437,7 +539,7 @@ docker images | grep wtb-backend
 
 ---
 
-## 六、systemd 配置（二进制部署方案）
+## 七、systemd 配置（二进制部署方案）
 
 如果不用 Docker，直接运行 backend-linux：
 
@@ -457,6 +559,7 @@ RestartSec=5
 StartLimitInterval=60s
 StartLimitBurst=3
 Environment="DB_DSN=host=127.0.0.1 user=admin password=JyRUj7wlNjU0uVHh port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+Environment="IMAGE_PATH=/var/www/wtb/images"
 Environment="WX_APPID=wx1e4315d1974c72f6"
 Environment="WX_APPSECRET="
 
@@ -471,7 +574,7 @@ sudo systemctl start wtb-backend
 
 ---
 
-## 七、问题速查表
+## 八、问题速查表
 
 | 现象 | 快速诊断 | 解决 |
 |------|---------|------|
@@ -482,9 +585,12 @@ sudo systemctl start wtb-backend
 | wtb 图片 404 | `curl -I https://wtb.lqqnw.cn/images/xxx.png` | 检查 `/var/www/wtb/images/` 是否有文件 |
 | wtbadm 图片 404 | `curl -I https://wtbadm.lqqnw.cn/images/xxx.png` | 检查 nginx 配置中 `^~ /images/` 是否在正则之前 |
 | 上传后小程序看不到 | 检查两个目录是否一致 | docker-compose volume 改为 `/var/www/wtb/images:/miniprogram/images` |
+| 小程序上传报 80051（包超 2MB） | `du -sh miniprogram/` | 删除 `miniprogram/images/dish_*.png` 等动态大图 |
+| 部署极慢（go build 卡死） | 服务器下载 Go 依赖慢 | 改用「超快速部署」：本地编译 + docker cp + restart |
 | scp 上传超时 | 公网不稳定 | 使用 EasyTier 内网 `10.144.144.1` |
 
 ---
 
-**最后更新：2026-05-23**  
+**最后更新：2026-05-27**
+> 本次更新：新增「超快速部署」方案、小程序包大小检查、图片上传路径修复说明。  
 **维护者：部署前务必运行 `pre-deploy-check.sh`，不通过禁止部署。**

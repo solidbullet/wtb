@@ -1,43 +1,38 @@
-# Dependencies
-node_modules/
 
-# Go build artifacts
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-backend/backend
-backend/backend-linux
-gateway/gateway
-gateway/gateway-service
-services/*/*-service
-
-# Test binary
-*.test
-
-# Output of the go coverage tool
-*.out
-
-# Logs
-*.log
-
-# Environment variables
+._*
+.DS_Store
 .env
-
-# IDE
 .idea/
 .vscode/
-*.swp
+*.dll
+*.dylib
+*.exe
+*.exe~
+*.log
+*.out
+*.so
 *.swo
+*.swp
+*.test
 *~
-
-# OS
-.DS_Store
-Thumbs.db
-
 # Admin web build
-dist/
-
+# Dependencies
+# Environment variables
+# Go build artifacts
+# IDE
+# Logs
+# OS
+# Output of the go coverage tool
 # Runtime uploaded images
+# Test binary
+backend/backend
+backend/backend-linux
+backend/backend.log
+dist/
+gateway/gateway
+gateway/gateway-service
 miniprogram/images/dish_*.png
+node_modules/
+services/*/*-service
+Thumbs.db
+uploads/

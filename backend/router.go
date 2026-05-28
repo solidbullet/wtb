@@ -24,8 +24,7 @@ import (
 var allowedOrigins = map[string]bool{
 	"http://localhost:5173": true,
 	"http://localhost:3000": true,
-	"https://wtb.lqqnw.cn":  true,
-	"https://wtb.anzhitek.com": true,
+	"https://wtb.lqqnw.cn": true,
 }
 
 func CORSMiddleware() gin.HandlerFunc {
@@ -87,7 +86,7 @@ func setupRouter(h *Handlers, userRepo *repository.UserRepo, userDB, orderDB *go
 
 	imagePath := os.Getenv("IMAGE_PATH")
 	if imagePath == "" {
-		imagePath = "../miniprogram/images"
+		imagePath = "uploads"
 	}
 	r.Static("/images", imagePath)
 

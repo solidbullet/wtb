@@ -50,7 +50,7 @@ func (s *SeatService) GenerateQrcodeBatch(seatIDs []uint) ([]map[string]interfac
 		if err != nil {
 			continue
 		}
-		qrcodeURL := fmt.Sprintf("https://wtb.example.com/seat?seat_id=%s", seat.Name)
+		qrcodeURL := fmt.Sprintf("https://wtb.lqqnw.cn/seat?seat_id=%s", seat.Name)
 		s.seatRepo.UpdateQrcode(seat.ID, qrcodeURL)
 		result = append(result, map[string]interface{}{
 			"seat_id":    seat.ID,

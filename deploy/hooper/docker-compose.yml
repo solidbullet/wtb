@@ -1,0 +1,49 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: wtb-postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: JyRUj7wlNjU0uVHh
+    ports:
+      - 127.0.0.1:5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - wtb-network
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U admin]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wtb-backend
+    environment:
+      DB_DSN: "host=postgres user=admin password=JyRUj7wlNjU0uVHh port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+      IMAGE_PATH: "/miniprogram/images"
+      WX_APPID: "wx1e4315d1974c72f6"
+      WX_APPSECRET: ""
+    ports:
+      - 127.0.0.1:18080:8080
+    volumes:
+      # ⚠️ 核心：统一挂载到 /var/www/wtb/images，确保上传后双域名可见
+      - /var/www/wtb/images:/miniprogram/images
+    networks:
+      - wtb-network
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+
+networks:
+  wtb-network:

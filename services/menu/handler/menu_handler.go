@@ -19,7 +19,7 @@ func getImageDir() string {
 	if dir := os.Getenv("IMAGE_PATH"); dir != "" {
 		return dir
 	}
-	return filepath.Join("..", "miniprogram", "images")
+	return "uploads"
 }
 
 type MenuHandler struct {
