@@ -29,6 +29,7 @@ backend/backend
 backend/backend-linux
 backend/backend.log
 dist/
+docker-compose.override.yml
 gateway/gateway
 gateway/gateway-service
 miniprogram/images/dish_*.png
@@ -36,3 +37,6 @@ node_modules/
 services/*/*-service
 Thumbs.db
 uploads/
+
+# Mini-program runtime images
+miniprogram/images/
