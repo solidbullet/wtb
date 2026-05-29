@@ -40,3 +40,9 @@ uploads/
 
 # Mini-program runtime images
 miniprogram/images/
+
+# Build artifacts (root level)
+/backend-linux
+
+# WeChat mini-program experience version QR codes
+/*体验版*.png
