@@ -1,0 +1,9 @@
+{
+  "name": "generateWxaCode",
+  "version": "1.0.0",
+  "description": "生成带桌号参数的微信小程序码",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

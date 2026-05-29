@@ -83,6 +83,22 @@
     <view class="cart-submit active" bindtap="goConfirm">去结算</view>
   </view>
 
+  <!-- 桌号选择弹窗 -->
+  <view class="seat-picker-mask" wx:if="{{showSeatPicker}}" bindtap="closeSeatPicker"></view>
+  <view class="seat-picker {{showSeatPicker?'show':''}}" wx:if="{{showSeatPicker}}" catchtap="onPickerTap">
+    <view class="picker-header">
+      <text class="picker-title">🪑 请选择桌号</text>
+      <text class="picker-sub">扫描桌上二维码后，请选择对应桌号开始点餐</text>
+    </view>
+    <view class="picker-grid">
+      <view class="picker-item" wx:for="{{seatOptions}}" wx:key="*this" bindtap="selectSeat" data-id="{{item}}">{{item}}</view>
+    </view>
+    <view class="picker-custom">
+      <input class="picker-input" placeholder="或手动输入桌号" value="{{seatInput}}" bindinput="onSeatInput" confirm-type="done" bindconfirm="confirmSeatInput" />
+      <view class="picker-btn" bindtap="confirmSeatInput">确定</view>
+    </view>
+  </view>
+
   <!-- 购物车弹层遮罩 -->
   <view class="panel-mask" wx:if="{{showCartPanel}}" bindtap="closeCartPanel"></view>
 

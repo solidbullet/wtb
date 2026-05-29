@@ -13,7 +13,13 @@ Page({
     submitting: false
   },
   async onLoad(options) {
-    const seatId = options.seat_id || 'demo-seat'
+    let seatId = options.seat_id
+    if (!seatId) {
+      seatId = wx.getStorageSync('seat_id')
+    }
+    if (!seatId) {
+      seatId = '2'
+    }
     this.setData({ seatId })
     await this.loadMemberInfo()   // 先等待会员信息加载完成
     await this.loadCart(seatId)   // 再加载购物车（此时 memberLevel 已正确）
@@ -29,7 +35,10 @@ Page({
     } catch (e) { console.log('load member info error', e) }
   },
   async loadCart(seatId) {
-    const sid = seatId || this.data.seatId || 'demo-seat'
+    let sid = seatId || this.data.seatId
+    if (!sid) {
+      sid = wx.getStorageSync('seat_id') || '2'
+    }
     try {
       // 自己获取会员等级，不依赖外部顺序
       let memberLevel = 0

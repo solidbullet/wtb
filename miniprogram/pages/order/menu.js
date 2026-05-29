@@ -16,38 +16,108 @@ Page({
     cartAmount: 0,
     seatId: '',
     showCartPanel: false,
+    showSeatPicker: false,
+    seatInput: '',
+    seatOptions: ['A01','A02','A03','A04','A05','A06','B01','B02','B03'],
     memberLevel: 0,
     defaultImage: resolveImageUrl('/images/food.png'),
     errorMsg: '',
     scanning: false
   },
 
+  _resolveSeatId(options) {
+    let seatId = ''
+    if (options && options.seat_id) {
+      seatId = options.seat_id
+    }
+    if (!seatId && options && options.scene) {
+      try {
+        const decoded = decodeURIComponent(options.scene)
+        const match = decoded.match(/seat_id=([^&]+)/)
+        if (match) {
+          seatId = match[1]
+        } else {
+          seatId = decoded
+        }
+      } catch (e) {
+        seatId = options.scene
+      }
+    }
+    return seatId
+  },
+
   onLoad(options) {
     this.loadCategories()
-    if (options.seat_id) {
-      this.setData({ seatId: options.seat_id })
+    let seatId = this._resolveSeatId(options)
+
+    if (seatId) {
+      this.setData({ seatId })
+      wx.setStorageSync('seat_id', seatId)
       this.loadCart()
-    } else if (SKIP_SCAN) {
+      app.onLoginReady(() => this.loadMemberInfo())
+      return
+    }
+
+    seatId = wx.getStorageSync('seat_id')
+    if (seatId) {
+      this.setData({ seatId })
+      this.loadCart()
+      app.onLoginReady(() => this.loadMemberInfo())
+      return
+    }
+
+    if (SKIP_SCAN) {
       this.setData({ seatId: 'dev-seat' })
       this.loadCart()
-    } else {
-      this.scanSeat()
+      app.onLoginReady(() => this.loadMemberInfo())
+      return
     }
+
+    // 没有桌号，显示选择弹窗
+    this.setData({ showSeatPicker: true })
     app.onLoginReady(() => this.loadMemberInfo())
   },
 
   onShow() {
-    if (!this.data.seatId && !this.data.scanning) {
-      if (SKIP_SCAN) {
-        this.setData({ seatId: 'dev-seat' })
-        this.loadCart()
-      } else {
-        this.scanSeat()
-      }
-    } else if (this.data.seatId) {
+    if (this.data.seatId && !this.data.showSeatPicker) {
       this.loadCart()
       app.onLoginReady(() => this.loadMemberInfo())
     }
+  },
+
+  selectSeat(e) {
+    const seatId = e.currentTarget.dataset.id
+    this.setData({ seatId, showSeatPicker: false })
+    wx.setStorageSync('seat_id', seatId)
+    wx.showToast({ title: '桌号: ' + seatId, icon: 'none' })
+    this.loadCart()
+    app.onLoginReady(() => this.loadMemberInfo())
+  },
+
+  onSeatInput(e) {
+    this.setData({ seatInput: e.detail.value.trim() })
+  },
+
+  confirmSeatInput() {
+    const seatId = this.data.seatInput
+    if (!seatId) {
+      wx.showToast({ title: '请输入桌号', icon: 'none' })
+      return
+    }
+    this.setData({ seatId, showSeatPicker: false, seatInput: '' })
+    wx.setStorageSync('seat_id', seatId)
+    wx.showToast({ title: '桌号: ' + seatId, icon: 'none' })
+    this.loadCart()
+    app.onLoginReady(() => this.loadMemberInfo())
+  },
+
+  closeSeatPicker() {
+    // 不允许关闭，必须选桌号
+    wx.showToast({ title: '请先选择桌号', icon: 'none' })
+  },
+
+  onPickerTap() {
+    // 阻止事件冒泡到遮罩层
   },
 
   async loadMemberInfo() {
@@ -171,10 +241,12 @@ Page({
         api.get('/api/seat/scan?code=' + encodeURIComponent(result)).then((verifyRes) => {
           const verifiedSeatId = verifyRes.data && verifyRes.data.seat_id ? verifyRes.data.seat_id : seatId
           this.setData({ seatId: verifiedSeatId, errorMsg: '' })
+          wx.setStorageSync('seat_id', verifiedSeatId)
           this.loadCart()
           wx.showToast({ title: '桌号: ' + verifiedSeatId, icon: 'none' })
         }).catch(() => {
           this.setData({ seatId: seatId, errorMsg: '' })
+          wx.setStorageSync('seat_id', seatId)
           this.loadCart()
         })
       },
@@ -198,6 +270,7 @@ Page({
       content: '重新扫码将清空当前购物车，确定换桌吗？',
       success: (res) => {
         if (res.confirm) {
+          wx.removeStorageSync('seat_id')
           this.setData({
             seatId: '', cartMap: {}, cartItems: [],
             cartTotal: 0, cartAmount: 0, cartOriginAmount: 0,
@@ -223,7 +296,7 @@ Page({
 
   plus(e) {
     if (!this.data.seatId) {
-      wx.showToast({ title: '请先扫码选择桌号', icon: 'none' })
+      wx.showToast({ title: '请先选择桌号', icon: 'none' })
       return
     }
     const id = parseInt(e.currentTarget.dataset.id)
@@ -358,7 +431,7 @@ Page({
   async goConfirm() {
     if (this.data.cartAmount <= 0) return
     if (!this.data.seatId) {
-      wx.showToast({ title: '请先扫码选择桌号', icon: 'none' })
+      wx.showToast({ title: '请先选择桌号', icon: 'none' })
       return
     }
     this.setData({ showCartPanel: false })

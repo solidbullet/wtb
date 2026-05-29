@@ -10,6 +10,7 @@ import ActivityManagement from './pages/ActivityManagement'
 import PointsManagement from './pages/PointsManagement'
 import RechargePlanManagement from './pages/RechargePlanManagement'
 import PetManagement from './pages/PetManagement'
+import SeatManagement from './pages/SeatManagement'
 import UserManagement from './pages/UserManagement'
 
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/points" element={<PointsManagement />} />
           <Route path="/recharge" element={<RechargePlanManagement />} />
           <Route path="/pets" element={<PetManagement />} />
+          <Route path="/seats" element={<SeatManagement />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -244,6 +244,7 @@ func setupRouter(h *Handlers, userRepo *repository.UserRepo, userDB, orderDB *go
 		seatAuth.GET("/areas", h.Seat.ListAreas)
 		seatAuth.POST("/areas", h.Seat.CreateArea)
 		seatAuth.GET("/list", h.Seat.ListSeats)
+		seatAuth.POST("/create", h.Seat.CreateSeat)
 		seatAuth.GET("/:id", h.Seat.GetSeat)
 		seatAuth.POST("/qrcode/batch", h.Seat.GenerateQrcodeBatch)
 	}

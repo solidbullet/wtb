@@ -193,7 +193,7 @@ func main() {
 	sear := seatrepo.NewAreaRepo(seatDB)
 	ser := seatrepo.NewSeatRepo(seatDB)
 	ssl := seatrepo.NewSeatStatusLogRepo(seatDB)
-	seatSvc := seatservice.NewSeatService(sear, ser, ssl)
+	seatSvc := seatservice.NewSeatService(sear, ser, ssl, wc)
 	seatHandler := seathandler.NewSeatHandler(seatSvc)
 
 	// Admin & Analytics

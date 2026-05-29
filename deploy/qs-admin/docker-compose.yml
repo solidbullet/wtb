@@ -1,45 +1,23 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: wtb-postgres
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: wtb123456
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - wtb-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   backend:
     image: wtb-backend:deploy
     container_name: wtb-backend
     environment:
-      DB_DSN: "host=postgres user=admin password=wtb123456 port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+      DB_DSN: "host=host.docker.internal user=admin password=wtb123456 port=5432 sslmode=disable TimeZone=Asia/Shanghai"
       IMAGE_PATH: "/app/images"
-      # 如需真实微信登录，请填写你的小程序 AppID 和 AppSecret
-      # WX_APPID: "wx1e4315d1974c72f6"
-      # WX_APPSECRET: "your_app_secret_here"
+      WX_APPID: "wx1e4315d1974c72f6"
+      WX_APPSECRET: "c4e88e19973ab1c7ac21ad5b27f4f742"
+      WX_ENV_VERSION: "trial"
     ports:
       - "18080:8080"
     volumes:
-      - ./images:/app/images
+      - ../../images:/app/images
+      - ../../uploads:/app/uploads
     networks:
       - wtb-network
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-volumes:
-  pgdata:
 
 networks:
   wtb-network:

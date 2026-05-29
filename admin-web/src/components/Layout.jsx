@@ -11,7 +11,8 @@ const pageTitles = {
   '/activity': '活动管理',
   '/points': '积分商品',
   '/recharge': '充值方案',
-  '/pets': '宠物管理'
+  '/pets': '宠物管理',
+  '/seats': '座位管理'
 }
 
 export default function Layout() {
@@ -38,6 +39,7 @@ export default function Layout() {
         <NavLink to="/points" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>⭐ 积分商品</NavLink>
         <NavLink to="/recharge" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>💰 充值方案</NavLink>
         <NavLink to="/pets" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>🐾 宠物管理</NavLink>
+        <NavLink to="/seats" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>🪑 座位管理</NavLink>
         <button className="nav-item" onClick={handleLogout}>🚪 退出登录</button>
       </aside>
       <div className="main">

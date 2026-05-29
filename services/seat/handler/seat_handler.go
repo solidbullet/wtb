@@ -55,6 +55,26 @@ func (h *SeatHandler) ListSeats(c *gin.Context) {
 	response.Success(c, seats)
 }
 
+// CreateSeat POST /api/seat/create
+func (h *SeatHandler) CreateSeat(c *gin.Context) {
+	var req struct {
+		AreaID   uint   `json:"area_id"`
+		Name     string `json:"name"`
+		Type     string `json:"type"`
+		Capacity int    `json:"capacity"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, 40001, "参数错误")
+		return
+	}
+	seat, err := h.svc.CreateSeat(req.AreaID, req.Name, req.Type, req.Capacity)
+	if err != nil {
+		response.Error(c, 50001, err.Error())
+		return
+	}
+	response.Success(c, seat)
+}
+
 // GetSeat GET /api/seat/:id
 func (h *SeatHandler) GetSeat(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
